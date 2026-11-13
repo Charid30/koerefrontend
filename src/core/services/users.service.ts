@@ -31,6 +31,11 @@ export class UsersService {
     return this.api.patch<{ message: string }>(`/users/${id}/reset-mot-de-passe`, { nouveauMotDePasse });
   }
 
+  /** Profil complet de l'utilisateur connecté (téléphone, département, dates…) */
+  getProfil() {
+    return this.api.get<User>('/auth/profil');
+  }
+
   changerMotDePasse(motDePasseActuel: string, nouveauMotDePasse: string) {
     return this.api.patch<{ message: string }>('/auth/changer-mot-de-passe', { motDePasseActuel, nouveauMotDePasse });
   }

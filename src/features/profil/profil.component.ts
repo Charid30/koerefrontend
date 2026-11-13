@@ -1,14 +1,16 @@
-import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule, NgClass } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe, NgClass } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
-  ReactiveFormsModule,
-  FormBuilder,
-  Validators,
   AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
   ValidationErrors,
+  Validators,
 } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { UsersService } from '../../core/services/users.service';
+import { User } from '../../core/models/user.model';
 
 function confirmerMdp(ctrl: AbstractControl): ValidationErrors | null {
   const mdp = ctrl.get('nouveauMotDePasse')?.value;
@@ -18,24 +20,26 @@ function confirmerMdp(ctrl: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-profil',
-  standalone: true,
-  imports: [CommonModule, NgClass, ReactiveFormsModule],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [NgClass, DatePipe, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './profil.component.html',
 })
 export class ProfilComponent implements OnInit {
-  private auth = inject(AuthService);
-  private svc = inject(UsersService);
-  private fb = inject(FormBuilder);
+  private readonly auth = inject(AuthService);
+  private readonly svc = inject(UsersService);
+  private readonly fb = inject(FormBuilder);
 
-  user = this.auth.user;
+  readonly user = this.auth.user;
+  /** Profil complet (téléphone, département, dates) chargé depuis l'API */
+  readonly profil = signal<User | null>(null);
 
-  loading = signal(false);
-  succes = signal('');
-  erreur = signal('');
-  afficherMdp = signal(false);
+  readonly loading = signal(false);
+  readonly succes = signal('');
+  readonly erreur = signal('');
+  readonly afficherMdp = signal(false);
+  readonly voirMdp = signal(false);
 
-  form = this.fb.group(
+  readonly form = this.fb.group(
     {
       motDePasseActuel: ['', Validators.required],
       nouveauMotDePasse: ['', [Validators.required, Validators.minLength(8)]],
@@ -44,7 +48,46 @@ export class ProfilComponent implements OnInit {
     { validators: confirmerMdp },
   );
 
-  ngOnInit() {}
+  private readonly nouveauMdp = toSignal(this.form.controls.nouveauMotDePasse.valueChanges, { initialValue: '' });
+
+  /** Critères affichés en direct sous le nouveau mot de passe */
+  readonly criteres = computed(() => {
+    const v = this.nouveauMdp() ?? '';
+    return [
+      { libelle: '8 caractères minimum', ok: v.length >= 8 },
+      { libelle: 'Une majuscule et une minuscule', ok: /[a-z]/.test(v) && /[A-Z]/.test(v) },
+      { libelle: 'Un chiffre', ok: /\d/.test(v) },
+      { libelle: 'Un caractère spécial', ok: /[^A-Za-z0-9]/.test(v) },
+    ];
+  });
+
+  readonly force = computed(() => {
+    const n = this.criteres().filter((c) => c.ok).length;
+    if (!this.nouveauMdp()) return null;
+    if (n <= 1) return { niveau: 1, libelle: 'Faible', couleur: 'bg-red-500' };
+    if (n <= 3) return { niveau: n, libelle: 'Moyen', couleur: 'bg-amber-400' };
+    return { niveau: 4, libelle: 'Solide', couleur: 'bg-green-500' };
+  });
+
+  ngOnInit() {
+    this.svc.getProfil().subscribe({ next: (p) => this.profil.set(p) });
+  }
+
+  initiales(): string {
+    const u = this.user();
+    return `${u?.prenom?.[0] ?? ''}${u?.nom?.[0] ?? ''}`.toUpperCase();
+  }
+
+  ouvrirChangement() {
+    this.succes.set('');
+    this.afficherMdp.set(true);
+  }
+
+  annuler() {
+    this.afficherMdp.set(false);
+    this.form.reset();
+    this.erreur.set('');
+  }
 
   changerMotDePasse() {
     if (this.form.invalid) {
@@ -57,7 +100,7 @@ export class ProfilComponent implements OnInit {
     const val = this.form.value;
     this.svc.changerMotDePasse(val.motDePasseActuel!, val.nouveauMotDePasse!).subscribe({
       next: () => {
-        this.succes.set('Mot de passe modifié avec succès.');
+        this.succes.set('Mot de passe modifié. Vos autres appareils ont été déconnectés par sécurité.');
         this.form.reset();
         this.loading.set(false);
         this.afficherMdp.set(false);
@@ -72,8 +115,8 @@ export class ProfilComponent implements OnInit {
   roleLabel(role: string): string {
     const m: Record<string, string> = {
       ADMIN: 'Administrateur',
-      RESPONSABLE_PARC: 'Responsable Parc',
-      RESPONSABLE_MAINTENANCE: 'Responsable Maintenance',
+      RESPONSABLE_PARC: 'Responsable parc',
+      RESPONSABLE_MAINTENANCE: 'Responsable maintenance',
       MECANICIEN: 'Mécanicien',
       CHAUFFEUR: 'Chauffeur',
       DIRECTION: 'Logistique',
@@ -81,15 +124,16 @@ export class ProfilComponent implements OnInit {
     return m[role] ?? role;
   }
 
+  /** Mêmes couleurs que la page Utilisateurs ; le rouge reste réservé aux alertes. */
   roleColor(role: string): string {
     const m: Record<string, string> = {
-      ADMIN: 'bg-red-100 text-red-700',
-      RESPONSABLE_PARC: 'bg-blue-100 text-blue-700',
-      RESPONSABLE_MAINTENANCE: 'bg-indigo-100 text-indigo-700',
-      MECANICIEN: 'bg-orange-100 text-orange-700',
-      CHAUFFEUR: 'bg-teal-100 text-teal-700',
-      DIRECTION: 'bg-purple-100 text-purple-700',
+      ADMIN: 'bg-primary-50 text-primary-700 ring-primary-600/20',
+      RESPONSABLE_PARC: 'bg-blue-50 text-blue-700 ring-blue-600/20',
+      RESPONSABLE_MAINTENANCE: 'bg-sky-50 text-sky-700 ring-sky-600/20',
+      MECANICIEN: 'bg-orange-50 text-orange-700 ring-orange-600/20',
+      CHAUFFEUR: 'bg-teal-50 text-teal-700 ring-teal-600/20',
+      DIRECTION: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-600/20',
     };
-    return m[role] ?? 'bg-gray-100 text-gray-600';
+    return m[role] ?? 'bg-gray-100 text-gray-600 ring-gray-500/20';
   }
 }

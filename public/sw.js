@@ -1,7 +1,7 @@
-// Service Worker — KOERE GMAO
+// Service Worker SOFARY GMAO
 // Stratégie : Network-first avec cache de secours.
 // Incrémenter CACHE_VERSION à chaque déploiement pour forcer le vidage du cache.
-const CACHE_VERSION = 'koere-v1';
+const CACHE_VERSION = 'sofary-v2';
 
 self.addEventListener('install', () => {
   self.skipWaiting();

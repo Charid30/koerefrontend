@@ -15,7 +15,7 @@ export class ApplicationMobileComponent {
     { num: 1, titre: 'Télécharger l\'APK', desc: 'Cliquez sur le bouton ci-dessous pour télécharger l\'application.' },
     { num: 2, titre: 'Autoriser les sources inconnues', desc: 'Sur Android, allez dans Paramètres → Sécurité → Activer "Sources inconnues" ou "Installer des apps inconnues".' },
     { num: 3, titre: 'Installer l\'application', desc: 'Ouvrez le fichier téléchargé (.apk) et suivez les instructions d\'installation.' },
-    { num: 4, titre: 'Se connecter', desc: 'Lancez KOERE et connectez-vous avec vos identifiants habituels.' },
+    { num: 4, titre: 'Se connecter', desc: 'Lancez SOFARY et connectez-vous avec vos identifiants habituels.' },
   ];
 
   copyUrl() {

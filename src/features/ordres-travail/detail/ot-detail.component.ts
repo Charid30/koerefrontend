@@ -1,4 +1,11 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  computed,
+  inject,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule, NgClass, DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { OtService } from '../../../core/services/ot.service';
@@ -9,6 +16,7 @@ import { OT_STATUT_LABELS, OT_STATUT_CLASSES, OT_TRANSITIONS } from '../ot.const
   selector: 'app-ot-detail',
   standalone: true,
   imports: [CommonModule, NgClass, RouterLink, DatePipe, DecimalPipe],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './ot-detail.component.html',
 })
 export class OtDetailComponent implements OnInit {
@@ -32,7 +40,10 @@ export class OtDetailComponent implements OnInit {
 
   private charger(id: number) {
     this.svc.getOne(id).subscribe({
-      next: (ot) => { this.ot.set(ot); this.loading.set(false); },
+      next: (ot) => {
+        this.ot.set(ot);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false),
     });
   }
@@ -42,7 +53,10 @@ export class OtDetailComponent implements OnInit {
     this.actionLoading.set(true);
     this.erreurAction.set('');
     this.svc.updateStatut(this.ot()!.id, statut).subscribe({
-      next: (ot) => { this.ot.set(ot); this.actionLoading.set(false); },
+      next: (ot) => {
+        this.ot.set(ot);
+        this.actionLoading.set(false);
+      },
       error: (err) => {
         this.erreurAction.set(err?.error?.message ?? 'Impossible de changer le statut.');
         this.actionLoading.set(false);
@@ -58,6 +72,10 @@ export class OtDetailComponent implements OnInit {
     return 'border-primary-200 text-primary-700 hover:bg-primary-50';
   }
 
-  statutLabel(s: string) { return OT_STATUT_LABELS[s] ?? s; }
-  statutClass(s: string) { return OT_STATUT_CLASSES[s] ?? 'bg-gray-100 text-gray-600'; }
+  statutLabel(s: string) {
+    return OT_STATUT_LABELS[s] ?? s;
+  }
+  statutClass(s: string) {
+    return OT_STATUT_CLASSES[s] ?? 'bg-gray-100 text-gray-600';
+  }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,7 +9,8 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);
@@ -36,12 +37,20 @@ export class LoginComponent {
     this.auth.login(email!, motDePasse!).subscribe({
       next: () => this.router.navigate(['/']),
       error: (err) => {
-        this.error.set(err.error?.message ?? 'Identifiants invalides');
+        this.error.set(
+          err.status === 0
+            ? 'Serveur injoignable. Vérifiez que l’API est démarrée.'
+            : (err.error?.message ?? 'Identifiants invalides'),
+        );
         this.loading.set(false);
       },
     });
   }
 
-  get emailCtrl() { return this.form.controls.email; }
-  get mdpCtrl() { return this.form.controls.motDePasse; }
+  get emailCtrl() {
+    return this.form.controls.email;
+  }
+  get mdpCtrl() {
+    return this.form.controls.motDePasse;
+  }
 }

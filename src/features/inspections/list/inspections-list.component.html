@@ -1,91 +1,146 @@
-<div class="p-3 sm:p-6 space-y-5">
+<div class="page">
 
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <!-- ── En-tête ───────────────────────────────────────────────────────── -->
+  <header class="page-entete">
     <div>
-      <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Inspections</h1>
-      <p class="text-sm text-gray-500 mt-0.5">{{ inspectionsFiltrees().length }} / {{ total() }} inspection(s)</p>
+      <h1 class="page-titre">Inspections</h1>
+      <p class="page-sous-titre">Contrôles pré-départ, périodiques et techniques des véhicules.</p>
     </div>
-    <button (click)="ouvrirModal()"
-      class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl shadow hover:bg-primary-700 transition-colors">
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-      </svg>
+    <button (click)="ouvrirModal()" class="btn-primaire self-start sm:self-auto">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
       Nouvelle inspection
     </button>
-  </div>
+  </header>
 
-  <!-- Barre de recherche -->
-  <div class="relative">
-    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-    </svg>
-    <input type="text" [value]="recherche()" (input)="recherche.set($any($event.target).value)"
-      placeholder="Rechercher une inspection…"
-      class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"/>
-  </div>
+  @if (!loading() && synthese().total === 0) {
+    <!-- ── Premier usage : état vide explicatif ───────────────────────── -->
+    <section class="carte flex flex-col items-center px-6 py-14 text-center">
+      <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600" aria-hidden="true">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      </span>
+      <h2 class="mt-4 text-base font-semibold text-gray-900">Aucune inspection pour l’instant</h2>
+      <p class="mt-1 max-w-md text-sm text-gray-500">
+        Une inspection vérifie point par point l’état d’un véhicule. Les anomalies relevées sont signalées automatiquement à l’équipe de maintenance.
+      </p>
+      <button (click)="ouvrirModal()" class="btn-primaire mt-6">Démarrer une inspection</button>
+    </section>
+  } @else {
+    <!-- ── Synthèse ───────────────────────────────────────────────────── -->
+    @if (synthese().total > 0) {
+      <section class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Synthèse des inspections">
+        <div class="stat">
+          <p class="stat-libelle">Inspections</p>
+          <p class="stat-valeur">{{ synthese().total }}</p>
+        </div>
+        <div class="stat">
+          <p class="stat-libelle">Taux de conformité</p>
+          <p class="stat-valeur">{{ synthese().tauxConformite }} %</p>
+        </div>
+        <button type="button" class="stat transition hover:ring-gray-300" (click)="filtreStatut.set(filtreStatut() === 'NON_CONFORME' ? '' : 'NON_CONFORME')"
+          [class.ring-2]="filtreStatut() === 'NON_CONFORME'" [class.ring-primary-500]="filtreStatut() === 'NON_CONFORME'">
+          <p class="stat-libelle">Non conformes</p>
+          <p class="stat-valeur">{{ synthese().nonConformes }}</p>
+        </button>
+        <div class="stat">
+          <p class="stat-libelle">Note moyenne</p>
+          <p class="stat-valeur">{{ synthese().noteMoyenne !== null ? (synthese().noteMoyenne! | number: '1.0-1' : 'fr') : '—' }}<span class="text-base font-normal text-gray-400"> / 20</span></p>
+        </div>
+      </section>
+    }
 
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-    @if (loading()) {
-      <div class="flex items-center justify-center py-16">
-        <div class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+    <!-- ── Liste ──────────────────────────────────────────────────────── -->
+    <section class="carte">
+      <div class="barre-outils">
+        <div class="relative lg:w-72">
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+          <input type="search" placeholder="Véhicule, inspecteur…" [value]="recherche()" (input)="recherche.set($any($event.target).value)"
+            aria-label="Rechercher une inspection" class="champ pl-9" />
+        </div>
+        <div class="flex flex-1 flex-wrap items-center gap-1.5">
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Filtrer par résultat">
+            <button type="button" class="puce" [class.puce-active]="!filtreStatut()" (click)="filtreStatut.set('')" [attr.aria-pressed]="!filtreStatut()">Toutes</button>
+            @for (st of statutsListe; track st) {
+              @if (comptesStatut()[st]) {
+                <button type="button" class="puce" [class.puce-active]="filtreStatut() === st" (click)="filtreStatut.set(filtreStatut() === st ? '' : st)" [attr.aria-pressed]="filtreStatut() === st">
+                  <span class="h-1.5 w-1.5 rounded-full" [ngClass]="statutPoint(st)"></span>
+                  {{ statutLabel(st) }} <span class="tabular-nums opacity-70">{{ comptesStatut()[st] }}</span>
+                </button>
+              }
+            }
+          </div>
+          <select [value]="filtreType()" (change)="filtreType.set($any($event.target).value)" aria-label="Filtrer par type"
+            class="champ ml-auto w-auto py-1.5 pr-8 text-xs">
+            <option value="">Tous les types</option>
+            @for (t of typesListe; track t) {
+              <option [value]="t">{{ typeLabel(t) }}</option>
+            }
+          </select>
+        </div>
       </div>
-    } @else if (inspectionsFiltrees().length === 0) {
-      <div class="py-16 text-center">
-        <p class="text-gray-400">Aucune inspection enregistrée</p>
-      </div>
-    } @else {
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50 border-b border-gray-100">
+
+      @if (loading()) {
+        <ul class="divide-y divide-gray-100" aria-busy="true">
+          @for (n of [1, 2, 3]; track n) {
+            <li class="flex items-center gap-4 px-4 py-4">
+              <div class="h-10 w-10 rounded-xl bg-gray-100 animate-pulse"></div>
+              <div class="h-3 flex-1 rounded bg-gray-100 animate-pulse"></div>
+              <div class="h-3 w-20 rounded bg-gray-100 animate-pulse"></div>
+            </li>
+          }
+        </ul>
+      } @else if (inspectionsFiltrees().length === 0) {
+        <div class="px-4 py-16 text-center">
+          <p class="text-sm font-medium text-gray-900">Aucune inspection ne correspond</p>
+          <button type="button" (click)="reinitialiserFiltres()" class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-800">Réinitialiser les filtres</button>
+        </div>
+      } @else {
+        <table class="tableau">
+          <thead class="hidden md:table-header-group">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Véhicule</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Inspecteur</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
-              <th class="px-4 py-3"></th>
+              <th scope="col">Véhicule</th>
+              <th scope="col" class="hidden lg:table-cell">Type</th>
+              <th scope="col">Date</th>
+              <th scope="col" class="text-right">Note</th>
+              <th scope="col">Résultat</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50">
+          <tbody>
             @for (i of inspectionsFiltrees(); track i.id) {
-              <tr class="hover:bg-gray-50 transition-colors">
-                <td class="px-4 py-3 text-gray-700">{{ i.dateInspection | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td class="px-4 py-3">
-                  @if (i.vehicule) {
-                    <p class="font-medium text-gray-800">{{ i.vehicule.marque }} {{ i.vehicule.modele }}</p>
-                    <p class="text-xs text-gray-400 font-mono">{{ i.vehicule.numeroInterne }}</p>
-                  }
+              <tr class="group cursor-pointer" (click)="ouvrirDetail(i.id)">
+                <td>
+                  <p class="font-medium text-gray-900">
+                    @if (i.vehicule) { {{ i.vehicule.marque }} {{ i.vehicule.modele }} } @else { — }
+                  </p>
+                  <p class="truncate text-xs text-gray-500">
+                    @if (i.vehicule) { <span class="font-mono">{{ i.vehicule.numeroInterne }}</span> }
+                    @if (i.inspecteur) { · par {{ i.inspecteur.prenom }} {{ i.inspecteur.nom }} }
+                  </p>
+                  <div class="mt-1.5 flex flex-wrap gap-1.5 md:hidden">
+                    <span class="badge" [ngClass]="statutClass(i.statut)">{{ statutLabel(i.statut) }}</span>
+                    <span class="text-xs text-gray-500">{{ i.dateInspection | date: 'd MMM, HH:mm' : '' : 'fr' }}</span>
+                  </div>
                 </td>
-                <td class="px-4 py-3 text-gray-600">{{ typeLabel(i.typeInspection) }}</td>
-                <td class="px-4 py-3 text-gray-600">
-                  @if (i.inspecteur) { {{ i.inspecteur.prenom }} {{ i.inspecteur.nom }} }
+                <td class="hidden text-gray-600 lg:table-cell">{{ typeLabel(i.typeInspection) }}</td>
+                <td class="hidden whitespace-nowrap tabular-nums text-gray-600 md:table-cell">{{ i.dateInspection | date: 'd MMM yyyy, HH:mm' : '' : 'fr' }}</td>
+                <td class="hidden text-right tabular-nums md:table-cell">
+                  @if (i.noteGlobale != null) {
+                    <span class="font-semibold text-gray-900">{{ i.noteGlobale }}</span><span class="text-gray-400"> / 20</span>
+                  } @else { <span class="text-gray-400">—</span> }
                 </td>
-                <td class="px-4 py-3">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    [ngClass]="statutClass(i.statut)">
+                <td class="hidden md:table-cell">
+                  <span class="badge" [ngClass]="statutClass(i.statut)">
+                    <span class="h-1.5 w-1.5 rounded-full" [ngClass]="statutPoint(i.statut)"></span>
                     {{ statutLabel(i.statut) }}
                   </span>
                 </td>
-                <td class="px-4 py-3 text-right">
-                  <div class="flex items-center justify-end gap-1">
-                    <button (click)="ouvrirDetail(i.id)" title="Voir le détail"
-                      class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-colors">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                      </svg>
+                <td class="text-right" (click)="$event.stopPropagation()">
+                  <div class="actions-survol">
+                    <button (click)="ouvrirEdit(i)" title="Modifier" aria-label="Modifier l’inspection" class="btn-icone">
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
                     </button>
-                    <button (click)="ouvrirEdit(i)" title="Modifier"
-                      class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                      </svg>
-                    </button>
-                    <button (click)="supprimerInspection(i.id)" title="Supprimer"
-                      class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
+                    <button (click)="supprimerInspection(i.id)" title="Supprimer" aria-label="Supprimer l’inspection" class="btn-icone-danger">
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                   </div>
                 </td>
@@ -93,75 +148,140 @@
             }
           </tbody>
         </table>
-      </div>
-      @if (totalPages() > 1) {
-        <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
-          <span>Page {{ page() }} sur {{ totalPages() }}</span>
-          <div class="flex gap-2">
-            <button [disabled]="page() === 1" (click)="goPage(page() - 1)"
-              class="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40">‹</button>
-            <button [disabled]="page() === totalPages()" (click)="goPage(page() + 1)"
-              class="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40">›</button>
-          </div>
+        <div class="pied-liste">
+          <span>
+            {{ inspectionsFiltrees().length }} inspection(s) affichée(s) sur {{ total() }}
+            @if (filtresActifs()) {
+              · <button type="button" (click)="reinitialiserFiltres()" class="font-medium text-primary-600 hover:text-primary-800">Réinitialiser les filtres</button>
+            }
+          </span>
+          @if (totalPages() > 1) {
+            <div class="flex items-center gap-2">
+              <span>Page {{ page() }} / {{ totalPages() }}</span>
+              <button [disabled]="page() === 1" (click)="goPage(page() - 1)" aria-label="Page précédente" class="rounded-lg px-2.5 py-1 ring-1 ring-inset ring-gray-200 hover:bg-gray-50 disabled:opacity-40">‹</button>
+              <button [disabled]="page() === totalPages()" (click)="goPage(page() + 1)" aria-label="Page suivante" class="rounded-lg px-2.5 py-1 ring-1 ring-inset ring-gray-200 hover:bg-gray-50 disabled:opacity-40">›</button>
+            </div>
+          }
         </div>
       }
-    }
-  </div>
-
+    </section>
+  }
 </div>
 
 <!-- ══ Modal Édition Inspection ══════════════════════════ -->
 @if (showEdit()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-       (click)="fermerEdit()">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col" (click)="$event.stopPropagation()">
-
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+    (click)="fermerEdit()"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col"
+      (click)="$event.stopPropagation()"
+    >
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
         <div>
           <h3 class="text-base font-bold text-gray-900">Modifier l'inspection</h3>
-          <p class="text-xs text-gray-400 mt-0.5">{{ typeLabel(inspectionAEditer()?.typeInspection) }} · {{ inspectionAEditer()?.vehicule?.numeroInterne }}</p>
+          <p class="text-xs text-gray-400 mt-0.5">
+            {{ typeLabel(inspectionAEditer()?.typeInspection ?? '') }} ·
+            {{ inspectionAEditer()?.vehicule?.numeroInterne }}
+          </p>
         </div>
-        <button (click)="fermerEdit()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+        <button
+          (click)="fermerEdit()"
+          class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+        >
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
 
       <form [formGroup]="editForm" class="px-6 py-5 space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Statut</label>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+            >Statut</label
+          >
           <div class="grid grid-cols-3 gap-2">
-            @for (s of [
-              {val:'CONFORME',     label:'Conforme',    cls:'text-green-700 border-green-200', bg:'bg-green-50'},
-              {val:'PARTIEL',      label:'Partiel',     cls:'text-orange-700 border-orange-200', bg:'bg-orange-50'},
-              {val:'NON_CONFORME', label:'Non conforme',cls:'text-red-700 border-red-200', bg:'bg-red-50'}
-            ]; track s.val) {
-              <button type="button" (click)="editForm.get('statut')!.setValue(s.val)"
+            @for (
+              s of [
+                {
+                  val: 'CONFORME',
+                  label: 'Conforme',
+                  cls: 'text-green-700 border-green-200',
+                  bg: 'bg-green-50',
+                },
+                {
+                  val: 'PARTIEL',
+                  label: 'Partiel',
+                  cls: 'text-orange-700 border-orange-200',
+                  bg: 'bg-orange-50',
+                },
+                {
+                  val: 'NON_CONFORME',
+                  label: 'Non conforme',
+                  cls: 'text-red-700 border-red-200',
+                  bg: 'bg-red-50',
+                },
+              ];
+              track s.val
+            ) {
+              <button
+                type="button"
+                (click)="editForm.get('statut')!.setValue(s.val)"
                 class="px-3 py-2 rounded-xl border text-xs font-medium transition-all"
-                [ngClass]="editForm.get('statut')!.value === s.val
-                  ? [s.cls, s.bg, 'ring-2 ring-offset-1']
-                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'">
+                [ngClass]="
+                  editForm.get('statut')!.value === s.val
+                    ? [s.cls, s.bg, 'ring-2 ring-offset-1']
+                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                "
+              >
                 {{ s.label }}
               </button>
             }
           </div>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Notes</label>
-          <textarea formControlName="notes" rows="4" placeholder="Observations, remarques..."
-            class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"></textarea>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+            >Notes</label
+          >
+          <textarea
+            formControlName="notes"
+            rows="4"
+            placeholder="Observations, remarques..."
+            class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 resize-none"
+          ></textarea>
         </div>
         @if (editErreur()) {
           <p class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ editErreur() }}</p>
         }
       </form>
 
-      <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-2xl">
-        <button type="button" (click)="fermerEdit()" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-white">Annuler</button>
-        <button type="button" (click)="sauvegarderEdit()" [disabled]="editLoading()"
-          class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 disabled:opacity-60">
-          @if (editLoading()) { <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> }
+      <div
+        class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-2xl"
+      >
+        <button
+          type="button"
+          (click)="fermerEdit()"
+          class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-white"
+        >
+          Annuler
+        </button>
+        <button
+          type="button"
+          (click)="sauvegarderEdit()"
+          [disabled]="editLoading()"
+          class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 disabled:opacity-60"
+        >
+          @if (editLoading()) {
+            <span
+              class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+            ></span>
+          }
           Enregistrer
         </button>
       </div>
@@ -171,12 +291,17 @@
 
 <!-- ══ Modal Confirmation ════════════════════════════════ -->
 @if (showConfirm()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
           <svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+            />
           </svg>
         </div>
         <div>
@@ -185,8 +310,18 @@
         </div>
       </div>
       <div class="flex gap-3 justify-end">
-        <button (click)="annulerConfirm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Annuler</button>
-        <button (click)="validerConfirm()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors">Supprimer</button>
+        <button
+          (click)="annulerConfirm()"
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+        >
+          Annuler
+        </button>
+        <button
+          (click)="validerConfirm()"
+          class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors"
+        >
+          Supprimer
+        </button>
       </div>
     </div>
   </div>
@@ -194,25 +329,41 @@
 
 <!-- ══ Modal Détail Inspection ════════════════════════════════ -->
 @if (showDetail()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
         <h2 class="text-lg font-bold text-gray-900">Détail de l'inspection</h2>
-        <button (click)="fermerDetail()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        <button
+          (click)="fermerDetail()"
+          class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
         </button>
       </div>
       <!-- Corps -->
       <div class="overflow-y-auto flex-1 px-6 py-4">
         @if (detailLoading()) {
-          <div class="flex justify-center py-12"><div class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div></div>
+          <div class="flex justify-center py-12">
+            <div
+              class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"
+            ></div>
+          </div>
         } @else if (inspectionDetail(); as d) {
           <!-- Infos générales -->
           <div class="grid grid-cols-2 gap-4 mb-6">
             <div>
               <p class="text-xs text-gray-400 uppercase font-semibold mb-1">Véhicule</p>
-              <p class="font-medium text-gray-800">{{ d.vehicule?.marque }} {{ d.vehicule?.modele }}</p>
+              <p class="font-medium text-gray-800">
+                {{ d.vehicule?.marque }} {{ d.vehicule?.modele }}
+              </p>
               <p class="text-xs text-gray-400 font-mono">{{ d.vehicule?.immatriculation }}</p>
             </div>
             <div>
@@ -221,7 +372,7 @@
             </div>
             <div>
               <p class="text-xs text-gray-400 uppercase font-semibold mb-1">Date</p>
-              <p class="text-gray-700">{{ d.dateInspection | date:'dd/MM/yyyy HH:mm' }}</p>
+              <p class="text-gray-700">{{ d.dateInspection | date: 'dd/MM/yyyy HH:mm' }}</p>
             </div>
             <div>
               <p class="text-xs text-gray-400 uppercase font-semibold mb-1">Inspecteur</p>
@@ -229,7 +380,11 @@
             </div>
             <div>
               <p class="text-xs text-gray-400 uppercase font-semibold mb-1">Statut</p>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="statutClass(d.statut)">{{ statutLabel(d.statut) }}</span>
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [ngClass]="statutClass(d.statut)"
+                >{{ statutLabel(d.statut) }}</span
+              >
             </div>
             @if (d.kilometrageReleve) {
               <div>
@@ -239,7 +394,9 @@
             }
             @if (d.heuresMoteurReleve) {
               <div>
-                <p class="text-xs text-gray-400 uppercase font-semibold mb-1">Heures moteur relevées</p>
+                <p class="text-xs text-gray-400 uppercase font-semibold mb-1">
+                  Heures moteur relevées
+                </p>
                 <p class="text-gray-700">{{ d.heuresMoteurReleve | number }} h</p>
               </div>
             }
@@ -259,13 +416,29 @@
           <!-- Points d'inspection -->
           @if (d.items?.length) {
             <div>
-              <p class="text-xs text-gray-400 uppercase font-semibold mb-3">Points d'inspection ({{ d.items.length }})</p>
+              <p class="text-xs text-gray-400 uppercase font-semibold mb-3">
+                Points d'inspection ({{ d.items.length }})
+              </p>
               <div class="space-y-2">
                 @for (item of d.items; track item.id) {
                   <div class="flex items-start gap-3 p-3 rounded-lg border border-gray-100">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold shrink-0 mt-0.5"
-                      [ngClass]="item.resultat === 'OK' ? 'bg-green-100 text-green-700' : item.resultat === 'KO' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'">
-                      {{ item.resultat === 'KO' ? 'NON' : item.resultat === 'NA' ? 'N/A' : item.resultat }}
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-bold shrink-0 mt-0.5"
+                      [ngClass]="
+                        item.resultat === 'OK'
+                          ? 'bg-green-100 text-green-700'
+                          : item.resultat === 'KO'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-gray-100 text-gray-500'
+                      "
+                    >
+                      {{
+                        item.resultat === 'KO'
+                          ? 'NON'
+                          : item.resultat === 'NA'
+                            ? 'N/A'
+                            : item.resultat
+                      }}
                     </span>
                     <div class="flex-1 min-w-0">
                       <p class="text-xs text-gray-400 font-medium">{{ item.categorie }}</p>
@@ -287,11 +460,14 @@
 
 <!-- ══ Wizard Inspection ════════════════════════════════ -->
 @if (showModal()) {
-  <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4"
-       (click)="fermerModal()">
-    <div class="bg-white w-full sm:rounded-2xl sm:shadow-2xl sm:max-w-xl flex flex-col max-h-screen sm:max-h-[92vh]"
-         (click)="$event.stopPropagation()">
-
+  <div
+    class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs sm:p-4"
+    (click)="fermerModal()"
+  >
+    <div
+      class="bg-white w-full sm:rounded-2xl sm:shadow-2xl sm:max-w-xl flex flex-col max-h-screen sm:max-h-[92vh]"
+      (click)="$event.stopPropagation()"
+    >
       <!-- Header -->
       <div class="px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
         <div class="flex items-center justify-between mb-5">
@@ -300,34 +476,79 @@
             <p class="text-xs text-gray-400 mt-0.5">
               {{ etape() }}/3 —
               @switch (etape()) {
-                @case (1) { Véhicule & Type }
-                @case (2) { Points de contrôle }
-                @case (3) { Notes & Finalisation }
+                @case (1) {
+                  Véhicule & Type
+                }
+                @case (2) {
+                  Points de contrôle
+                }
+                @case (3) {
+                  Notes & Finalisation
+                }
               }
             </p>
           </div>
-          <button (click)="fermerModal()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+          <button
+            (click)="fermerModal()"
+            class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+          >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         <!-- Steps -->
         <div class="flex items-center">
-          @for (s of [{n:1,t:'Véhicule'},{n:2,t:'Contrôle'},{n:3,t:'Notes'}]; track s.n) {
+          @for (
+            s of [
+              { n: 1, t: 'Véhicule' },
+              { n: 2, t: 'Contrôle' },
+              { n: 3, t: 'Notes' },
+            ];
+            track s.n
+          ) {
             <div class="flex items-center" [class.flex-1]="s.n < 3">
               <div class="flex items-center gap-2 shrink-0">
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
-                  [ngClass]="etape() > s.n ? 'bg-primary-600 text-white' : etape() === s.n ? 'bg-primary-600 text-white ring-4 ring-primary-100' : 'bg-gray-100 text-gray-400'">
+                <div
+                  class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                  [ngClass]="
+                    etape() > s.n
+                      ? 'bg-primary-600 text-white'
+                      : etape() === s.n
+                        ? 'bg-primary-600 text-white ring-4 ring-primary-100'
+                        : 'bg-gray-100 text-gray-400'
+                  "
+                >
                   @if (etape() > s.n) {
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                  } @else { {{ s.n }} }
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2.5"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  } @else {
+                    {{ s.n }}
+                  }
                 </div>
-                <span class="text-xs font-medium hidden sm:block" [ngClass]="etape() >= s.n ? 'text-gray-800' : 'text-gray-400'">{{ s.t }}</span>
+                <span
+                  class="text-xs font-medium hidden sm:block"
+                  [ngClass]="etape() >= s.n ? 'text-gray-800' : 'text-gray-400'"
+                  >{{ s.t }}</span
+                >
               </div>
               @if (s.n < 3) {
-                <div class="flex-1 h-0.5 mx-3" [ngClass]="etape() > s.n ? 'bg-primary-600' : 'bg-gray-200'"></div>
+                <div
+                  class="flex-1 h-0.5 mx-3"
+                  [ngClass]="etape() > s.n ? 'bg-primary-600' : 'bg-gray-200'"
+                ></div>
               }
             </div>
           }
@@ -336,31 +557,49 @@
 
       <!-- Contenu -->
       <form [formGroup]="form" (ngSubmit)="soumettre()" class="flex-1 overflow-y-auto px-6 py-5">
-
         <!-- ÉTAPE 1 : Véhicule & Type -->
         @if (etape() === 1) {
           <div class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Véhicule / Engin <span class="text-red-500">*</span></label>
+              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+                >Véhicule / Engin <span class="text-red-500">*</span></label
+              >
               <!-- Champ de recherche -->
               <div class="relative">
-                <input type="text"
+                <input
+                  type="text"
                   [value]="rechercheVehicule()"
-                  (input)="rechercheVehicule.set($any($event.target).value); showVehiculeResults.set(true)"
+                  (input)="
+                    rechercheVehicule.set($any($event.target).value); showVehiculeResults.set(true)
+                  "
                   (focus)="showVehiculeResults.set(true)"
                   placeholder="Numéro de série, immatriculation, marque…"
-                  class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
-                  [ngClass]="form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched ? 'border-red-300' : 'border-gray-200'" />
+                  class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all"
+                  [ngClass]="
+                    form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched
+                      ? 'border-red-300'
+                      : 'border-gray-200'
+                  "
+                />
                 <!-- Résultats -->
                 @if (showVehiculeResults() && vehiculesFiltres().length > 0) {
-                  <div class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto">
+                  <div
+                    class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto"
+                  >
                     @for (v of vehiculesFiltres(); track v.id) {
-                      <button type="button" (click)="selectionnerVehicule(v)"
-                        class="w-full text-left px-4 py-2.5 hover:bg-primary-50 transition-colors border-b border-gray-50 last:border-0">
-                        <p class="text-sm font-medium text-gray-800">{{ v.marque }} {{ v.modele }}</p>
+                      <button
+                        type="button"
+                        (click)="selectionnerVehicule(v)"
+                        class="w-full text-left px-4 py-2.5 hover:bg-primary-50 transition-colors border-b border-gray-50 last:border-0"
+                      >
+                        <p class="text-sm font-medium text-gray-800">
+                          {{ v.marque }} {{ v.modele }}
+                        </p>
                         <p class="text-xs text-gray-400">
                           N° interne : {{ v.numeroInterne }}
-                          @if (v.numeroSerie) { · Série : {{ v.numeroSerie }} }
+                          @if (v.numeroSerie) {
+                            · Série : {{ v.numeroSerie }}
+                          }
                           · {{ v.immatriculation }}
                         </p>
                       </button>
@@ -370,11 +609,26 @@
               </div>
               <!-- Véhicule sélectionné -->
               @if (vehiculeSelectionne()) {
-                <div class="mt-2 flex items-center gap-2 px-3 py-2 bg-primary-50 border border-primary-200 rounded-xl">
-                  <svg class="w-4 h-4 text-primary-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                <div
+                  class="mt-2 flex items-center gap-2 px-3 py-2 bg-primary-50 border border-primary-200 rounded-xl"
+                >
+                  <svg
+                    class="w-4 h-4 text-primary-600 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
-                  <span class="text-sm text-primary-700 font-medium">{{ vehiculeSelectionne()!.marque }} {{ vehiculeSelectionne()!.modele }} — {{ vehiculeSelectionne()!.numeroInterne }}</span>
+                  <span class="text-sm text-primary-700 font-medium"
+                    >{{ vehiculeSelectionne()!.marque }} {{ vehiculeSelectionne()!.modele }} —
+                    {{ vehiculeSelectionne()!.numeroInterne }}</span
+                  >
                 </div>
               }
               @if (form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched) {
@@ -383,14 +637,21 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Type d'inspection</label>
+              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+                >Type d'inspection</label
+              >
               <div class="grid grid-cols-2 gap-2">
                 @for (t of types; track t.value) {
-                  <button type="button" (click)="form.get('typeInspection')!.setValue(t.value)"
+                  <button
+                    type="button"
+                    (click)="form.get('typeInspection')!.setValue(t.value)"
                     class="px-3 py-2.5 rounded-xl border text-sm font-medium transition-all text-left"
-                    [ngClass]="form.get('typeInspection')!.value === t.value
-                      ? 'border-primary-500 bg-primary-50 text-primary-700 ring-2 ring-primary-200'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'">
+                    [ngClass]="
+                      form.get('typeInspection')!.value === t.value
+                        ? 'border-primary-500 bg-primary-50 text-primary-700 ring-2 ring-primary-200'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'
+                    "
+                  >
                     {{ t.label }}
                   </button>
                 }
@@ -399,19 +660,39 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div class="col-span-2 sm:col-span-1">
-                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Date & Heure <span class="text-red-500">*</span></label>
-                <input type="datetime-local" formControlName="dateInspection"
-                  class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+                <label
+                  class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+                  >Date & Heure <span class="text-red-500">*</span></label
+                >
+                <input
+                  type="datetime-local"
+                  formControlName="dateInspection"
+                  class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all"
+                />
               </div>
               <div class="col-span-2 sm:col-span-1">
                 @if (estEnginHeure()) {
-                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Heures moteur relevées</label>
-                  <input type="number" formControlName="heuresMoteurReleve" placeholder="ex: 2340"
-                    class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+                  <label
+                    class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+                    >Heures moteur relevées</label
+                  >
+                  <input
+                    type="number"
+                    formControlName="heuresMoteurReleve"
+                    placeholder="ex: 2340"
+                    class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all"
+                  />
                 } @else {
-                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Kilométrage relevé</label>
-                  <input type="number" formControlName="kilometrageReleve" placeholder="ex: 27 320"
-                    class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+                  <label
+                    class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+                    >Kilométrage relevé</label
+                  >
+                  <input
+                    type="number"
+                    formControlName="kilometrageReleve"
+                    placeholder="ex: 27 320"
+                    class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all"
+                  />
                 }
               </div>
             </div>
@@ -423,11 +704,23 @@
           <div class="space-y-3">
             @if (itemsArray.length === 0) {
               <div class="py-10 text-center text-gray-400">
-                <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                <svg
+                  class="w-10 h-10 mx-auto mb-3 text-gray-300"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
                 <p class="text-sm">Aucun point de contrôle</p>
-                <p class="text-xs mt-1">Sélectionnez un véhicule à l'étape 1 pour charger la fiche</p>
+                <p class="text-xs mt-1">
+                  Sélectionnez un véhicule à l'étape 1 pour charger la fiche
+                </p>
               </div>
             }
 
@@ -436,34 +729,66 @@
                 <div class="border border-gray-100 rounded-xl overflow-hidden">
                   <!-- En-tête de catégorie -->
                   <div class="bg-gray-100 px-3 py-1.5">
-                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ groupe.categorie }}</span>
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{
+                      groupe.categorie
+                    }}</span>
                   </div>
                   <!-- Items de la catégorie -->
                   <div class="divide-y divide-gray-50">
                     @for (idx of groupe.indices; track idx) {
                       <div [formGroupName]="idx" class="bg-white px-3 py-2.5">
                         <div class="flex items-center justify-between gap-3">
-                          <p class="text-sm text-gray-800 flex-1 leading-snug">{{ itemsArray.at(idx).get('libelle')!.value }}</p>
+                          <p class="text-sm text-gray-800 flex-1 leading-snug">
+                            {{ itemsArray.at(idx).get('libelle')!.value }}
+                          </p>
                           <div class="flex gap-1 shrink-0">
-                            @for (r of ['OK','KO','NA']; track r) {
-                              <button type="button" (click)="setResultat(idx, r)"
+                            @for (r of ['OK', 'KO', 'NA']; track r) {
+                              <button
+                                type="button"
+                                (click)="setResultat(idx, r)"
                                 class="px-2 py-1 rounded-lg text-xs font-bold transition-all"
-                                [ngClass]="itemsArray.at(idx).get('resultat')!.value === r
-                                  ? (r === 'OK' ? 'bg-green-100 text-green-700 ring-2 ring-green-300' : r === 'KO' ? 'bg-red-100 text-red-700 ring-2 ring-red-300' : 'bg-gray-200 text-gray-600 ring-2 ring-gray-300')
-                                  : 'bg-white border border-gray-200 text-gray-400 hover:border-gray-300'">
+                                [ngClass]="
+                                  itemsArray.at(idx).get('resultat')!.value === r
+                                    ? r === 'OK'
+                                      ? 'bg-green-100 text-green-700 ring-2 ring-green-300'
+                                      : r === 'KO'
+                                        ? 'bg-red-100 text-red-700 ring-2 ring-red-300'
+                                        : 'bg-gray-200 text-gray-600 ring-2 ring-gray-300'
+                                    : 'bg-white border border-gray-200 text-gray-400 hover:border-gray-300'
+                                "
+                              >
                                 {{ r === 'KO' ? 'NON' : r === 'NA' ? 'N/A' : r }}
                               </button>
                             }
-                            <button type="button" (click)="supprimerItem(idx)"
-                              class="ml-1 p-1 text-gray-300 hover:text-red-400 rounded-lg transition-colors">
-                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <button
+                              type="button"
+                              (click)="supprimerItem(idx)"
+                              class="ml-1 p-1 text-gray-300 hover:text-red-400 rounded-lg transition-colors"
+                            >
+                              <svg
+                                class="w-3.5 h-3.5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
                             </button>
                           </div>
                         </div>
                         @if (itemsArray.at(idx).get('resultat')!.value === 'KO') {
                           <div class="mt-2">
-                            <input formControlName="observation" type="text" placeholder="Observation (obligatoire pour NON)…"
-                              class="w-full border border-red-200 rounded-lg px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-red-300 transition-all"/>
+                            <input
+                              formControlName="observation"
+                              type="text"
+                              placeholder="Observation (obligatoire pour NON)…"
+                              class="w-full border border-red-200 rounded-lg px-3 py-1.5 text-xs bg-white focus:outline-hidden focus:ring-2 focus:ring-red-300 transition-all"
+                            />
                           </div>
                         }
                       </div>
@@ -474,52 +799,73 @@
             </div>
 
             @if (!showAddForm()) {
-              <button type="button" (click)="ouvrirFormAjout()"
-                class="w-full py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-xs text-gray-400 hover:border-primary-300 hover:text-primary-500 transition-colors">
+              <button
+                type="button"
+                (click)="ouvrirFormAjout()"
+                class="w-full py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-xs text-gray-400 hover:border-primary-300 hover:text-primary-500 transition-colors"
+              >
                 + Ajouter un point de contrôle
               </button>
             } @else {
               <div class="bg-primary-50 border border-primary-200 rounded-xl p-4 space-y-3">
-                <p class="text-xs font-semibold text-primary-700 uppercase tracking-wide">Nouveau point</p>
+                <p class="text-xs font-semibold text-primary-700 uppercase tracking-wide">
+                  Nouveau point
+                </p>
 
                 <!-- Catégorie -->
                 <div>
                   <label class="block text-xs text-gray-500 mb-1">Catégorie</label>
                   <div class="flex gap-2">
-                    <select class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-400"
+                    <select
+                      class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-400"
                       [value]="newCategorie()"
-                      (change)="newCategorie.set($any($event.target).value)">
-                      <option value="">— Nouvelle catégorie ({{ prochainNumeroCategorie() }}. …) —</option>
+                      (change)="newCategorie.set($any($event.target).value)"
+                    >
+                      <option value="">
+                        — Nouvelle catégorie ({{ prochainNumeroCategorie() }}. …) —
+                      </option>
                       @for (cat of categoriesExistantes(); track cat) {
                         <option [value]="cat">{{ cat }}</option>
                       }
                     </select>
                   </div>
                   @if (!newCategorie()) {
-                    <input type="text" placeholder="Ex : {{ prochainNumeroCategorie() }}. HYDRAULIQUE"
-                      class="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-400"
-                      (input)="newCategorie.set($any($event.target).value)" />
+                    <input
+                      type="text"
+                      placeholder="Ex : {{ prochainNumeroCategorie() }}. HYDRAULIQUE"
+                      class="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-400"
+                      (input)="newCategorie.set($any($event.target).value)"
+                    />
                   }
                 </div>
 
                 <!-- Libellé -->
                 <div>
                   <label class="block text-xs text-gray-500 mb-1">Point à contrôler</label>
-                  <input type="text" placeholder="Ex : Absence de fuites sur flexibles et vérins"
-                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-400"
+                  <input
+                    type="text"
+                    placeholder="Ex : Absence de fuites sur flexibles et vérins"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-400"
                     [value]="newLibelle()"
                     (input)="newLibelle.set($any($event.target).value)"
-                    (keydown.enter)="confirmerAjout()" />
+                    (keydown.enter)="confirmerAjout()"
+                  />
                 </div>
 
                 <div class="flex gap-2 justify-end">
-                  <button type="button" (click)="showAddForm.set(false)"
-                    class="px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded-lg hover:bg-white transition-colors">
+                  <button
+                    type="button"
+                    (click)="showAddForm.set(false)"
+                    class="px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded-lg hover:bg-white transition-colors"
+                  >
                     Annuler
                   </button>
-                  <button type="button" (click)="confirmerAjout()"
+                  <button
+                    type="button"
+                    (click)="confirmerAjout()"
                     [disabled]="!newLibelle().trim() || !newCategorie().trim()"
-                    class="px-4 py-1.5 text-xs font-semibold bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-40 transition-colors">
+                    class="px-4 py-1.5 text-xs font-semibold bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-40 transition-colors"
+                  >
                     Ajouter
                   </button>
                 </div>
@@ -532,15 +878,29 @@
         @if (etape() === 3) {
           <div class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Note globale (0 – 20)</label>
-              <input type="number" formControlName="noteGlobale" min="0" max="20" step="0.5" placeholder="Ex : 17"
-                class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+                >Note globale (0 – 20)</label
+              >
+              <input
+                type="number"
+                formControlName="noteGlobale"
+                min="0"
+                max="20"
+                step="0.5"
+                placeholder="Ex : 17"
+                class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all"
+              />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Observations générales</label>
-              <textarea formControlName="notes" rows="5"
+              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+                >Observations générales</label
+              >
+              <textarea
+                formControlName="notes"
+                rows="5"
                 placeholder="Remarques, anomalies générales, préconisations..."
-                class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all resize-none"></textarea>
+                class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all resize-none"
+              ></textarea>
             </div>
 
             <!-- Résumé KO -->
@@ -556,57 +916,115 @@
             }
 
             @if (erreurModal()) {
-              <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{{ erreurModal() }}</div>
+              <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                {{ erreurModal() }}
+              </div>
             }
           </div>
         }
-
       </form>
 
       <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 sm:rounded-b-2xl shrink-0 flex items-center justify-between">
+      <div
+        class="px-6 py-4 border-t border-gray-100 bg-gray-50 sm:rounded-b-2xl shrink-0 flex items-center justify-between"
+      >
         @if (etape() === 1) {
-          <button type="button" (click)="fermerModal()"
-            class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors">
+          <button
+            type="button"
+            (click)="fermerModal()"
+            class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors"
+          >
             Annuler
           </button>
-          <button type="button" (click)="suivant()"
-            class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-colors">
+          <button
+            type="button"
+            (click)="suivant()"
+            class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-colors"
+          >
             Suivant
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
           </button>
         } @else if (etape() === 2) {
-          <button type="button" (click)="precedent()"
-            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <button
+            type="button"
+            (click)="precedent()"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
             Précédent
           </button>
           <div class="flex items-center gap-2">
             <span class="text-xs text-gray-400">{{ itemsArray.length }} point(s)</span>
-            <button type="button" (click)="suivant()"
-              class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-colors">
+            <button
+              type="button"
+              (click)="suivant()"
+              class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-colors"
+            >
               Suivant
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
             </button>
           </div>
         } @else {
-          <button type="button" (click)="precedent()"
-            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <button
+            type="button"
+            (click)="precedent()"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
             Précédent
           </button>
-          <button type="button" (click)="soumettre()" [disabled]="modalLoading()"
-            class="inline-flex items-center gap-2 px-5 py-2 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 disabled:opacity-50 transition-colors">
+          <button
+            type="button"
+            (click)="soumettre()"
+            [disabled]="modalLoading()"
+            class="inline-flex items-center gap-2 px-5 py-2 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 disabled:opacity-50 transition-colors"
+          >
             @if (modalLoading()) {
-              <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span
+                class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+              ></span>
             } @else {
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
             }
             Enregistrer l'inspection
           </button>
         }
       </div>
-
     </div>
   </div>
 }

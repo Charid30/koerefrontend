@@ -1,195 +1,191 @@
-<div class="p-3 sm:p-6 space-y-6">
+<div class="page">
 
-  <!-- En-tête -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <!-- ── En-tête ───────────────────────────────────────────────────────── -->
+  <header class="page-entete">
     <div>
-      <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Signalisation panne</h1>
-      <p class="text-sm text-gray-500 mt-0.5">{{ total() }} signalisation(s) enregistrée(s)</p>
+      <h1 class="page-titre">Signalements de panne</h1>
+      <p class="page-sous-titre">Les pannes déclarées par les équipes, de la déclaration à la résolution.</p>
     </div>
     @if (peutCreer()) {
-      <button (click)="ouvrirModal()"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
+      <button (click)="ouvrirModal()" class="btn-primaire self-start sm:self-auto">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
         Signaler une panne
       </button>
     }
-  </div>
+  </header>
 
-  <!-- Filtres + recherche -->
-  <div class="flex flex-wrap gap-3">
-    <!-- Recherche -->
-    <div class="relative">
-      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
-      </svg>
-      <input type="text" placeholder="Rechercher N°DI, véhicule…"
-        [value]="recherche()"
-        (input)="recherche.set($any($event.target).value)"
-        class="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent w-52"/>
-    </div>
-    <div class="relative">
-      <select (change)="filtrer($any($event.target).value, filtrePriorite())"
-        class="appearance-none text-sm border border-gray-200 rounded-lg pl-3 pr-8 py-2 bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent cursor-pointer">
-        <option value="">Tous les statuts</option>
-        <option value="EN_ATTENTE">En attente</option>
-        <option value="PRISE_EN_CHARGE">Prise en charge</option>
-        <option value="TRAITEE">Traitée</option>
-        <option value="REJETEE">Rejetée</option>
-      </select>
-      <svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-      </svg>
-    </div>
-    <div class="relative">
-      <select (change)="filtrer(filtreStatut(), $any($event.target).value)"
-        class="appearance-none text-sm border border-gray-200 rounded-lg pl-3 pr-8 py-2 bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent cursor-pointer">
-        <option value="">Toutes les priorités</option>
-        <option value="CRITIQUE">Critique</option>
-        <option value="URGENTE">Urgente</option>
-        <option value="NORMALE">Normale</option>
-        <option value="FAIBLE">Faible</option>
-      </select>
-      <svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-      </svg>
-    </div>
-  </div>
-
-  <!-- Tableau -->
-  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-    @if (loading()) {
-      <div class="flex items-center justify-center py-20">
-        <div class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+  <!-- ── Synthèse ─────────────────────────────────────────────────────── -->
+  @if (synthese().total > 0) {
+    <section class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Synthèse des signalements">
+      <button type="button" class="stat transition hover:ring-gray-300" (click)="choisirStatut('EN_ATTENTE')"
+        [class.ring-2]="filtreStatut() === 'EN_ATTENTE'" [class.ring-primary-500]="filtreStatut() === 'EN_ATTENTE'">
+        <p class="stat-libelle">À prendre en charge</p>
+        <p class="stat-valeur">{{ synthese().enAttente }}</p>
+      </button>
+      <button type="button" class="stat transition hover:ring-gray-300" (click)="choisirStatut('PRISE_EN_CHARGE')"
+        [class.ring-2]="filtreStatut() === 'PRISE_EN_CHARGE'" [class.ring-primary-500]="filtreStatut() === 'PRISE_EN_CHARGE'">
+        <p class="stat-libelle">En cours de traitement</p>
+        <p class="stat-valeur">{{ synthese().priseEnCharge }}</p>
+      </button>
+      <div class="stat">
+        <p class="stat-libelle">Urgentes ou critiques ouvertes</p>
+        <p class="stat-valeur flex items-center gap-2">
+          {{ synthese().prioritairesOuvertes }}
+          @if (synthese().prioritairesOuvertes > 0) {
+            <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor" aria-label="À traiter en priorité"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
+          }
+        </p>
       </div>
-    } @else if (dis().length === 0) {
-      <div class="text-center py-16 text-gray-400">
-        <svg class="w-10 h-10 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
-        <p class="font-medium">Aucune signalisation de panne</p>
+      <div class="stat">
+        <p class="stat-libelle">Traitées</p>
+        <p class="stat-valeur">{{ synthese().traitees }} <span class="text-base font-normal text-gray-400">/ {{ synthese().total }}</span></p>
+      </div>
+    </section>
+  }
+
+  <!-- ── Liste ────────────────────────────────────────────────────────── -->
+  <section class="carte">
+    <div class="barre-outils">
+      <div class="relative lg:w-72">
+        <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+        <input type="search" placeholder="N° DI, véhicule, description…" [value]="recherche()" (input)="recherche.set($any($event.target).value)"
+          aria-label="Rechercher un signalement" class="champ pl-9" />
+      </div>
+      <div class="flex flex-1 flex-wrap items-center gap-1.5">
+        <div class="flex flex-wrap gap-1.5" role="group" aria-label="Filtrer par statut">
+          <button type="button" class="puce" [class.puce-active]="!filtreStatut()" (click)="choisirStatut('')" [attr.aria-pressed]="!filtreStatut()">
+            Tous <span class="tabular-nums opacity-70">{{ synthese().total }}</span>
+          </button>
+          @for (st of statutsListe; track st) {
+            @if (comptesStatut()[st]) {
+              <button type="button" class="puce" [class.puce-active]="filtreStatut() === st" (click)="choisirStatut(st)" [attr.aria-pressed]="filtreStatut() === st">
+                <span class="h-1.5 w-1.5 rounded-full" [ngClass]="statutPoint(st)"></span>
+                {{ STATUT_LABELS[st] }} <span class="tabular-nums opacity-70">{{ comptesStatut()[st] }}</span>
+              </button>
+            }
+          }
+        </div>
+        <select [value]="filtrePriorite()" (change)="choisirPriorite($any($event.target).value)" aria-label="Filtrer par priorité"
+          class="champ ml-auto w-auto py-1.5 pr-8 text-xs">
+          <option value="">Toutes les priorités</option>
+          @for (p of prioritesListe; track p) {
+            <option [value]="p">{{ PRIORITE_LABELS[p] }}{{ comptesPriorite()[p] ? ' (' + comptesPriorite()[p] + ')' : '' }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <ul class="divide-y divide-gray-100" aria-busy="true">
+        @for (i of [1, 2, 3]; track i) {
+          <li class="flex items-center gap-4 px-4 py-4">
+            <div class="h-3 w-24 rounded bg-gray-100 animate-pulse"></div>
+            <div class="h-3 flex-1 rounded bg-gray-100 animate-pulse"></div>
+            <div class="h-3 w-20 rounded bg-gray-100 animate-pulse"></div>
+          </li>
+        }
+      </ul>
+    } @else if (disFiltres().length === 0) {
+      <div class="px-4 py-16 text-center">
+        <p class="text-sm font-medium text-gray-900">Aucun signalement</p>
+        @if (filtresActifs()) {
+          <button type="button" (click)="reinitialiserFiltres()" class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-800">Réinitialiser les filtres</button>
+        } @else {
+          <p class="mt-1 text-sm text-gray-500">Aucune panne n’a été déclarée.</p>
+        }
       </div>
     } @else {
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50 border-b border-gray-100">
-            <tr class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              <th class="px-6 py-3">N° DI</th>
-              <th class="px-6 py-3">Véhicule</th>
-              <th class="px-6 py-3">Description</th>
-              <th class="px-6 py-3">Priorité</th>
-              <th class="px-6 py-3">Statut</th>
-              <th class="px-6 py-3">Date</th>
-              <th class="px-6 py-3">Déclarant</th>
-              <th class="px-6 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-50">
-            @for (di of disFiltres(); track di.id) {
-              <tr class="hover:bg-gray-50 transition-colors">
-                <td class="px-6 py-4 font-mono font-semibold text-primary-700">{{ di.numeroDI }}</td>
-                <td class="px-6 py-4">
-                  @if (di.vehicule) {
-                    <div class="font-medium text-gray-900">{{ di.vehicule.marque }} {{ di.vehicule.modele }}</div>
-                    <div class="text-xs text-gray-400">{{ di.vehicule.numeroInterne }}</div>
+      <table class="tableau">
+        <thead class="hidden md:table-header-group">
+          <tr>
+            <th scope="col">Panne</th>
+            <th scope="col">Priorité</th>
+            <th scope="col">Statut</th>
+            <th scope="col" class="hidden xl:table-cell">Déclarée</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (di of disFiltres(); track di.id) {
+            <tr class="group cursor-pointer" (click)="ouvrirDetail(di)">
+              <td>
+                <p class="truncate font-medium text-gray-900">{{ di.description }}</p>
+                <p class="truncate text-xs text-gray-500">
+                  <span class="font-mono">{{ di.numeroDI }}</span>
+                  @if (di.vehicule) { · {{ di.vehicule.marque }} {{ di.vehicule.modele }} ({{ di.vehicule.numeroInterne }}) }
+                </p>
+                <div class="mt-1.5 flex flex-wrap gap-1.5 md:hidden">
+                  <span class="badge" [ngClass]="prioriteClass(di.priorite)">{{ PRIORITE_LABELS[di.priorite] ?? di.priorite }}</span>
+                  <span class="badge" [ngClass]="statutClass(di.statut)">{{ STATUT_LABELS[di.statut] ?? di.statut }}</span>
+                </div>
+              </td>
+              <td class="hidden md:table-cell">
+                <span class="badge" [ngClass]="prioriteClass(di.priorite)">
+                  @if (estPrioritaire(di.priorite)) {
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
                   }
-                </td>
-                <td class="px-6 py-4 max-w-xs">
-                  <p class="truncate text-gray-700">{{ di.description }}</p>
-                </td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" [ngClass]="prioriteClass(di.priorite)">
-                    {{ PRIORITE_LABELS[di.priorite] ?? di.priorite }}
-                  </span>
-                </td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" [ngClass]="statutClass(di.statut)">
-                    {{ STATUT_LABELS[di.statut] ?? di.statut }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-gray-500 whitespace-nowrap">
-                  {{ di.dateSignalement | date:'dd/MM/yyyy' }}
-                </td>
-                <td class="px-6 py-4 text-gray-600">
-                  @if (di.declarant) { {{ di.declarant.nom }} {{ di.declarant.prenom }} }
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex items-center gap-1">
-                    <!-- Voir détail -->
-                    <button (click)="ouvrirDetail(di)" title="Voir le détail"
-                      class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-colors">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                      </svg>
-                    </button>
+                  {{ PRIORITE_LABELS[di.priorite] ?? di.priorite }}
+                </span>
+              </td>
+              <td class="hidden md:table-cell">
+                <span class="badge" [ngClass]="statutClass(di.statut)">
+                  <span class="h-1.5 w-1.5 rounded-full" [ngClass]="statutPoint(di.statut)"></span>
+                  {{ STATUT_LABELS[di.statut] ?? di.statut }}
+                </span>
+              </td>
+              <td class="hidden whitespace-nowrap text-gray-600 xl:table-cell">
+                <p class="tabular-nums">{{ di.dateSignalement | date: 'd MMM yyyy' : '' : 'fr' }}</p>
+                @if (di.declarant) { <p class="text-xs text-gray-500">par {{ di.declarant.prenom }} {{ di.declarant.nom }}</p> }
+              </td>
+              <td class="text-right" (click)="$event.stopPropagation()">
+                <div class="flex items-center justify-end gap-1">
+                  <!-- Étape suivante du traitement, toujours visible -->
+                  @if (peutChangerStatut() && di.statut === 'EN_ATTENTE') {
+                    <button (click)="changerStatut(di, 'PRISE_EN_CHARGE')" class="btn-action">Prendre en charge</button>
+                  }
+                  @if (peutChangerStatut() && di.statut === 'PRISE_EN_CHARGE') {
+                    <button (click)="changerStatut(di, 'TRAITEE')" class="btn-action">Marquer traitée</button>
+                  }
+                  <div class="actions-survol">
                     @if (peutChangerStatut()) {
-                      <!-- Modifier -->
-                      <button (click)="ouvrirEdit(di)" title="Modifier"
-                        class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                        </svg>
+                      <button (click)="ouvrirEdit(di)" title="Modifier" aria-label="Modifier le signalement" class="btn-icone">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
                       </button>
-                      <!-- Prendre en charge -->
-                      @if (di.statut === 'EN_ATTENTE') {
-                        <button (click)="changerStatut(di, 'PRISE_EN_CHARGE')"
-                          class="p-1.5 rounded-lg text-blue-400 hover:text-blue-700 hover:bg-blue-50 transition-colors"
-                          title="Prendre en charge">
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
-                        </button>
-                      }
-                      <!-- Marquer traitée -->
-                      @if (di.statut === 'PRISE_EN_CHARGE') {
-                        <button (click)="changerStatut(di, 'TRAITEE')"
-                          class="p-1.5 rounded-lg text-green-400 hover:text-green-700 hover:bg-green-50 transition-colors"
-                          title="Marquer traitée">
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
-                        </button>
-                      }
                     }
                     @if (peutSupprimer()) {
-                      <button (click)="supprimer(di)" title="Supprimer"
-                        class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
+                      <button (click)="supprimer(di)" title="Supprimer" aria-label="Supprimer le signalement" class="btn-icone-danger">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                       </button>
                     }
                   </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      @if (totalPages() > 1) {
-        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-          <span class="text-sm text-gray-500">Page {{ page() }} / {{ totalPages() }}</span>
-          <div class="flex gap-2">
-            <button (click)="goPage(page() - 1)" [disabled]="page() === 1"
-              class="px-3 py-1.5 text-sm border rounded-lg disabled:opacity-40 hover:bg-gray-50">Préc.</button>
-            <button (click)="goPage(page() + 1)" [disabled]="page() === totalPages()"
-              class="px-3 py-1.5 text-sm border rounded-lg disabled:opacity-40 hover:bg-gray-50">Suiv.</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <div class="pied-liste">
+        <span>
+          {{ disFiltres().length }} signalement(s) affiché(s) sur {{ total() }}
+          @if (filtresActifs()) {
+            · <button type="button" (click)="reinitialiserFiltres()" class="font-medium text-primary-600 hover:text-primary-800">Réinitialiser les filtres</button>
+          }
+        </span>
+        @if (totalPages() > 1) {
+          <div class="flex items-center gap-2">
+            <span>Page {{ page() }} / {{ totalPages() }}</span>
+            <button [disabled]="page() === 1" (click)="goPage(page() - 1)" aria-label="Page précédente" class="rounded-lg px-2.5 py-1 ring-1 ring-inset ring-gray-200 hover:bg-gray-50 disabled:opacity-40">‹</button>
+            <button [disabled]="page() === totalPages()" (click)="goPage(page() + 1)" aria-label="Page suivante" class="rounded-lg px-2.5 py-1 ring-1 ring-inset ring-gray-200 hover:bg-gray-50 disabled:opacity-40">›</button>
           </div>
-        </div>
-      }
+        }
+      </div>
     }
-  </div>
+  </section>
 </div>
 
 <!-- ══ Modal Confirmation ════════════════════════════════ -->
 @if (showConfirm()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
@@ -210,7 +206,7 @@
 
 <!-- ══ Modal Détail DI ════════════════════════════════════ -->
 @if (showDetail()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
        (click)="fermerDetail()">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" (click)="$event.stopPropagation()">
 
@@ -285,7 +281,7 @@
 
 <!-- ══ Modal Édition DI ════════════════════════════════════ -->
 @if (showEdit()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
        (click)="fermerEdit()">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style="max-height: 90vh;" (click)="$event.stopPropagation()">
 
@@ -305,7 +301,7 @@
 
         <div>
           <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Statut</label>
-          <select formControlName="statut" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+          <select formControlName="statut" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500">
             <option value="EN_ATTENTE">En attente</option>
             <option value="PRISE_EN_CHARGE">Prise en charge</option>
             <option value="TRAITEE">Traitée</option>
@@ -337,13 +333,13 @@
         <div>
           <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Localisation</label>
           <input type="text" formControlName="localisation" placeholder="Ex : Chantier Nord, km 12"
-            class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"/>
+            class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500"/>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Description <span class="text-red-500">*</span></label>
           <textarea formControlName="description" rows="4"
-            class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+            class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 resize-none"
             [class.border-red-300]="editForm.get('description')?.invalid && editForm.get('description')?.touched"></textarea>
         </div>
 
@@ -366,7 +362,7 @@
 
 <!-- ══ Wizard DI ══════════════════════════════════════════ -->
 @if (showModal()) {
-  <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4"
+  <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs sm:p-4"
        (click)="fermerModal()">
     <div class="bg-white w-full sm:rounded-2xl sm:shadow-2xl sm:max-w-lg flex flex-col max-h-screen sm:max-h-[90vh]"
          (click)="$event.stopPropagation()">
@@ -440,7 +436,7 @@
                       (input)="rechercheVehicule.set($any($event.target).value)"
                       (focus)="showVehiculeResults.set(true)"
                       (blur)="$any($event.relatedTarget)?.closest?.('.vehicule-result') || showVehiculeResults.set(false)"
-                      class="w-full pl-9 pr-4 py-3 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                      class="w-full pl-9 pr-4 py-3 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                       [class.border-red-300]="form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched"
                       [class.border-gray-200]="!(form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched)" />
                   </div>
@@ -509,7 +505,7 @@
                 </button>
               </div>
               <input formControlName="localisation" type="text" placeholder="Ex : Chantier Nord, km 12"
-                class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"/>
+                class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"/>
               @if (geoErreur()) {
                 <p class="text-xs text-red-500 mt-1">{{ geoErreur() }}</p>
               }
@@ -519,7 +515,7 @@
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Description de la panne <span class="text-red-500">*</span></label>
               <textarea formControlName="description" rows="5"
                 placeholder="Décrivez précisément la panne ou l'anomalie constatée..."
-                class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
+                class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
                 [class.border-red-300]="form.get('description')?.invalid && form.get('description')?.touched"
                 [class.border-gray-200]="!(form.get('description')?.invalid && form.get('description')?.touched)"></textarea>
               @if (form.get('description')?.hasError('minlength') && form.get('description')?.touched) {

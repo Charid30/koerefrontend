@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -8,6 +8,7 @@ import { VehiculesService } from '../../../core/services/vehicules.service';
   selector: 'app-vehicule-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './vehicule-form.component.html',
 })
 export class VehiculeFormComponent implements OnInit {
@@ -18,68 +19,69 @@ export class VehiculeFormComponent implements OnInit {
 
   isEdit = false;
   private vehiculeId?: number;
-  loading   = signal(false);
+  loading = signal(false);
   erreurServeur = signal('');
-  entites   = signal<string[]>([]);
+  entites = signal<string[]>([]);
 
   form = this.fb.group({
-    numeroInterne:    ['', Validators.required],
-    immatriculation:  ['', Validators.required],
-    marque:           ['', Validators.required],
-    modele:           ['', Validators.required],
-    typeVehicule:     ['', Validators.required],
-    numeroSerie:      ['', Validators.required],
-    annee:            [null as number | null],
-    carburant:        [''],
-    couleur:          [''],
-    kilometrage:      [0],
-    heuresMoteur:     [0],
-    dateAcquisition:  [''],
-    entite:           [''],
-    departement:      [''],
+    numeroInterne: ['', Validators.required],
+    immatriculation: ['', Validators.required],
+    marque: ['', Validators.required],
+    modele: ['', Validators.required],
+    typeVehicule: ['', Validators.required],
+    numeroSerie: ['', Validators.required],
+    annee: [null as number | null],
+    carburant: [''],
+    couleur: [''],
+    kilometrage: [0],
+    heuresMoteur: [0],
+    dateAcquisition: [''],
+    entite: [''],
+    departement: [''],
     siteGeographique: [''],
-    statut:           ['DISPONIBLE'],
-    notes:            [''],
+    statut: ['DISPONIBLE'],
+    notes: [''],
   });
 
   types = [
-    { value: 'VOITURE',            label: 'Voiture' },
-    { value: 'CAMION',             label: 'Camion' },
+    { value: 'VOITURE', label: 'Voiture' },
+    { value: 'CAMION', label: 'Camion' },
     { value: 'EQUIPEMENT_SPECIAL', label: 'Équipement spécial' },
-    { value: 'ENGIN_TP',           label: 'Engin TP' },
+    { value: 'ENGIN_TP', label: 'Engin TP' },
   ];
 
   carburants = [
-    { value: 'DIESEL',    label: 'Diesel' },
-    { value: 'ESSENCE',   label: 'Essence' },
-    { value: 'ELECTRIQUE',label: 'Électrique' },
-    { value: 'HYBRIDE',   label: 'Hybride' },
-    { value: 'GPL',       label: 'GPL' },
+    { value: 'DIESEL', label: 'Diesel' },
+    { value: 'ESSENCE', label: 'Essence' },
+    { value: 'ELECTRIQUE', label: 'Électrique' },
+    { value: 'HYBRIDE', label: 'Hybride' },
+    { value: 'GPL', label: 'GPL' },
   ];
 
   statuts = [
-    { value: 'DISPONIBLE',                    label: 'Disponible' },
-    { value: 'EN_CIRCULATION',                label: 'En circulation' },
-    { value: 'EN_MAINTENANCE',                label: 'En maintenance' },
+    { value: 'DISPONIBLE', label: 'Disponible' },
+    { value: 'EN_CIRCULATION', label: 'En circulation' },
+    { value: 'EN_MAINTENANCE', label: 'En maintenance' },
     { value: 'EN_ATTENTE_REPARATION_EXTERNE', label: 'Att. réparation ext.' },
-    { value: 'EN_ATTENTE_PIECES',             label: 'Att. pièces' },
-    { value: 'IMMOBILISE',                    label: 'Immobilisé' },
-    { value: 'ACCIDENTE',                     label: 'Accidenté' },
-    { value: 'HORS_SERVICE',                  label: 'Hors service' },
+    { value: 'EN_ATTENTE_PIECES', label: 'Att. pièces' },
+    { value: 'IMMOBILISE', label: 'Immobilisé' },
+    { value: 'ACCIDENTE', label: 'Accidenté' },
+    { value: 'HORS_SERVICE', label: 'Hors service' },
   ];
 
   ngOnInit() {
-    this.svc.getEntites().subscribe(e => this.entites.set(e));
+    this.svc.getEntites().subscribe((e) => this.entites.set(e));
     const id = this.route.snapshot.paramMap.get('id');
     if (id && id !== 'nouveau') {
       this.isEdit = true;
       this.vehiculeId = Number(id);
       this.svc.getOne(this.vehiculeId).subscribe({
-        next: (v) => this.form.patchValue({
-          ...v,
-          dateAcquisition: v.dateAcquisition ? v.dateAcquisition.substring(0, 10) : '',
-          carburant: v.carburant ?? '',
-        }),
+        next: (v) =>
+          this.form.patchValue({
+            ...v,
+            dateAcquisition: v.dateAcquisition ? v.dateAcquisition.substring(0, 10) : '',
+            carburant: v.carburant ?? '',
+          }),
         error: () => this.router.navigate(['/vehicules']),
       });
     }
@@ -103,14 +105,12 @@ export class VehiculeFormComponent implements OnInit {
     if (!data.dateAcquisition) delete data.dateAcquisition;
     if (!data.annee) delete data.annee;
 
-    const op = this.isEdit
-      ? this.svc.update(this.vehiculeId!, data)
-      : this.svc.create(data);
+    const op = this.isEdit ? this.svc.update(this.vehiculeId!, data) : this.svc.create(data);
 
     op.subscribe({
       next: (v) => this.router.navigate(['/vehicules', (v as any).id]),
       error: (err) => {
-        this.erreurServeur.set(err?.error?.message ?? 'Erreur lors de l\'enregistrement.');
+        this.erreurServeur.set(err?.error?.message ?? "Erreur lors de l'enregistrement.");
         this.loading.set(false);
       },
     });

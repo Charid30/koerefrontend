@@ -6,9 +6,9 @@
   </div>
 
   <!-- Carte identité -->
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-    <div class="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-8 flex items-center gap-5">
-      <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
+    <div class="bg-linear-to-r from-primary-600 to-primary-700 px-6 py-8 flex items-center gap-5">
+      <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
         <span class="text-white text-2xl font-bold">
           {{ user()?.prenom?.[0] }}{{ user()?.nom?.[0] }}
         </span>
@@ -47,7 +47,7 @@
   </div>
 
   <!-- Sécurité -->
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-xs">
     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
       <div>
         <h2 class="text-base font-bold text-gray-900">Mot de passe</h2>
@@ -74,7 +74,7 @@
         <div>
           <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Mot de passe actuel <span class="text-red-500">*</span></label>
           <input type="password" formControlName="motDePasseActuel" autocomplete="current-password"
-            class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+            class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all"
             [ngClass]="form.get('motDePasseActuel')?.invalid && form.get('motDePasseActuel')?.touched ? 'border-red-300' : 'border-gray-200'"/>
           @if (form.get('motDePasseActuel')?.invalid && form.get('motDePasseActuel')?.touched) {
             <p class="text-xs text-red-500 mt-1">Requis</p>
@@ -85,7 +85,7 @@
           <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Nouveau mot de passe <span class="text-red-500">*</span></label>
           <input type="password" formControlName="nouveauMotDePasse" autocomplete="new-password"
             placeholder="8 caractères minimum"
-            class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+            class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all"
             [ngClass]="form.get('nouveauMotDePasse')?.invalid && form.get('nouveauMotDePasse')?.touched ? 'border-red-300' : 'border-gray-200'"/>
           @if (form.get('nouveauMotDePasse')?.hasError('minlength') && form.get('nouveauMotDePasse')?.touched) {
             <p class="text-xs text-red-500 mt-1">8 caractères minimum</p>
@@ -95,7 +95,7 @@
         <div>
           <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Confirmer le nouveau mot de passe <span class="text-red-500">*</span></label>
           <input type="password" formControlName="confirmerMotDePasse" autocomplete="new-password"
-            class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+            class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 transition-all"
             [ngClass]="(form.get('confirmerMotDePasse')?.touched && form.hasError('nonConforme')) ? 'border-red-300' : 'border-gray-200'"/>
           @if (form.get('confirmerMotDePasse')?.touched && form.hasError('nonConforme')) {
             <p class="text-xs text-red-500 mt-1">Les mots de passe ne correspondent pas</p>

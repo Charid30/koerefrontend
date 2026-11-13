@@ -1,124 +1,179 @@
-<div class="p-6 space-y-8 max-w-4xl">
-
-  <div>
-    <h1 class="text-2xl font-bold text-gray-900">Rapports &amp; Exports</h1>
-    <p class="text-sm text-gray-500 mt-0.5">Téléchargez les rapports au format Excel (.xlsx)</p>
+<!-- Bouton de téléchargement commun : état de chargement + heure du dernier téléchargement -->
+<ng-template #boutonTelecharger let-cle="cle" let-libelle="libelle" let-desactive="desactive">
+  <div class="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 pt-5">
+    <button type="button" (click)="telecharger(cle)" [disabled]="desactive || etat(cle).enCours"
+      class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-xs transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none">
+      @if (etat(cle).enCours) {
+        <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true"></span>
+        Préparation…
+      } @else {
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        {{ libelle }}
+      }
+    </button>
+    @if (etat(cle).dernier; as d) {
+      <span class="inline-flex items-center gap-1 text-xs text-gray-500">
+        <svg class="h-3.5 w-3.5 text-green-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+        </svg>
+        Téléchargé à {{ d | date: 'HH:mm' }}
+      </span>
+    }
   </div>
+</ng-template>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Contenu d'un rapport (puces) -->
+<ng-template #contenu let-elements>
+  <ul class="mt-3 flex flex-wrap gap-1.5">
+    @for (e of elements; track e) {
+      <li class="rounded-md bg-gray-50 px-2 py-0.5 text-xs text-gray-600 ring-1 ring-inset ring-gray-200">{{ e }}</li>
+    }
+  </ul>
+</ng-template>
 
-    <!-- État du parc -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
+<div class="mx-auto max-w-7xl space-y-5">
+
+  <!-- ── En-tête ───────────────────────────────────────────────────────── -->
+  <header>
+    <h1 class="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">Rapports &amp; exports</h1>
+    <p class="mt-1 text-sm text-gray-500">Générez des fichiers Excel prêts à partager ou à archiver.</p>
+  </header>
+
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+    <!-- ── Rapport mensuel (le plus utilisé, mis en avant) ─────────────── -->
+    <section class="flex flex-col rounded-2xl bg-white p-5 shadow-xs ring-1 ring-gray-200/70 sm:p-6 lg:row-span-2">
       <div class="flex items-start gap-4">
-        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
-          <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zm0 0l2-2 2-5H13v7z"/>
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
-        </div>
-        <div>
-          <h3 class="font-semibold text-gray-900">État du Parc</h3>
-          <p class="text-sm text-gray-500 mt-0.5">Liste complète de tous les véhicules avec statut, compteur, nombre d'OT et DI.</p>
+        </span>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-base font-semibold text-gray-900">Rapport mensuel</h2>
+            <span class="rounded-md bg-green-50 px-1.5 py-0.5 text-[11px] font-medium text-green-700 ring-1 ring-inset ring-green-600/20">.xlsx</span>
+          </div>
+          <p class="mt-0.5 text-sm text-gray-500">La synthèse d’activité d’un mois, pour le suivi de gestion.</p>
+          <ng-container *ngTemplateOutlet="contenu; context: { $implicit: ['OT préventifs et correctifs', 'Coût total en FCFA', 'Inspections', 'Sorties de pièces'] }" />
         </div>
       </div>
-      <button (click)="telechargerEtatParc()"
-        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-        </svg>
-        Télécharger
-      </button>
-    </div>
 
-    <!-- État du stock -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
-      <div class="flex items-start gap-4">
-        <div class="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center shrink-0">
-          <svg class="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="font-semibold text-gray-900">État du Stock</h3>
-          <p class="text-sm text-gray-500 mt-0.5">Inventaire complet des pièces avec alertes de seuil minimum.</p>
-        </div>
-      </div>
-      <button (click)="telechargerStock()"
-        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-        </svg>
-        Télécharger
-      </button>
-    </div>
-
-    <!-- Rapport mensuel -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
-      <div class="flex items-start gap-4">
-        <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
-          <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="font-semibold text-gray-900">Rapport Mensuel</h3>
-          <p class="text-sm text-gray-500 mt-0.5">Synthèse OT, coûts, inspections et pièces consommées pour un mois donné.</p>
-        </div>
-      </div>
-      <div class="flex gap-2">
-        <select [(ngModel)]="mois"
-          class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
-          @for (m of moisOptions; track m.value) {
-            <option [value]="m.value">{{ m.label }}</option>
+      <!-- Choix de la période -->
+      <fieldset class="mt-6">
+        <legend class="text-sm font-medium text-gray-700">Période</legend>
+        <div class="mt-2 flex flex-wrap gap-1.5">
+          @for (r of raccourcis; track r.label) {
+            <button type="button" (click)="choisirPeriode(r.annee, r.mois)"
+              class="rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset transition-colors"
+              [ngClass]="estPeriode(r.annee, r.mois) ? 'bg-gray-900 text-white ring-gray-900' : 'bg-white text-gray-600 ring-gray-200 hover:bg-gray-50'"
+              [attr.aria-pressed]="estPeriode(r.annee, r.mois)">
+              {{ r.label }}
+            </button>
           }
-        </select>
-        <select [(ngModel)]="annee"
-          class="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
-          @for (a of annees; track a) {
-            <option [value]="a">{{ a }}</option>
-          }
-        </select>
-      </div>
-      <button (click)="telechargerMensuel()"
-        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-        </svg>
-        Télécharger le rapport
-      </button>
-    </div>
-
-    <!-- Historique véhicule -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
-      <div class="flex items-start gap-4">
-        <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center shrink-0">
-          <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
         </div>
-        <div>
-          <h3 class="font-semibold text-gray-900">Historique Véhicule</h3>
-          <p class="text-sm text-gray-500 mt-0.5">Inspections, OT et DI complets d'un véhicule sélectionné.</p>
+        <div class="mt-3 grid grid-cols-[1fr_auto] gap-2 sm:max-w-sm">
+          <label class="sr-only" for="rapport-mois">Mois</label>
+          <select id="rapport-mois" [ngModel]="mois()" (ngModelChange)="mois.set(+$event)"
+            class="rounded-xl border-0 bg-gray-50 py-2 pl-3 pr-8 text-sm ring-1 ring-inset ring-gray-200 focus:bg-white focus:ring-2 focus:ring-primary-500">
+            @for (m of moisOptions; track m.value) {
+              <option [ngValue]="m.value">{{ m.label }}</option>
+            }
+          </select>
+          <label class="sr-only" for="rapport-annee">Année</label>
+          <select id="rapport-annee" [ngModel]="annee()" (ngModelChange)="annee.set(+$event)"
+            class="rounded-xl border-0 bg-gray-50 py-2 pl-3 pr-8 text-sm ring-1 ring-inset ring-gray-200 focus:bg-white focus:ring-2 focus:ring-primary-500">
+            @for (a of annees; track a) {
+              <option [ngValue]="a">{{ a }}</option>
+            }
+          </select>
         </div>
-      </div>
-      <select (change)="vehiculeId.set($any($event.target).value ? +$any($event.target).value : null)"
-        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-        <option value="">Choisir un véhicule</option>
-        @for (v of vehicules(); track v.id) {
-          <option [value]="v.id">{{ v.marque }} {{ v.modele }} ({{ v.numeroInterne }})</option>
+        @if (periodeFuture()) {
+          <p class="mt-2 text-xs text-amber-700">Ce mois n’est pas encore commencé : le rapport sera vide.</p>
         }
-      </select>
-      <button (click)="telechargerHistorique()" [disabled]="!vehiculeId()"
-        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-        </svg>
-        Télécharger l'historique
-      </button>
-    </div>
+      </fieldset>
+
+      <ng-container *ngTemplateOutlet="boutonTelecharger; context: { cle: 'mensuel', libelle: 'Télécharger ' + periodeLibelle(), desactive: false }" />
+    </section>
+
+    <!-- ── État du parc ─────────────────────────────────────────────── -->
+    <section class="flex flex-col rounded-2xl bg-white p-5 shadow-xs ring-1 ring-gray-200/70 sm:p-6">
+      <div class="flex items-start gap-4">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zm0 0l2-2 2-5H13v7z"/>
+          </svg>
+        </span>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-base font-semibold text-gray-900">État du parc</h2>
+            <span class="rounded-md bg-green-50 px-1.5 py-0.5 text-[11px] font-medium text-green-700 ring-1 ring-inset ring-green-600/20">.xlsx</span>
+          </div>
+          <p class="mt-0.5 text-sm text-gray-500">Photographie de tous les véhicules à la date du jour.</p>
+          <ng-container *ngTemplateOutlet="contenu; context: { $implicit: ['Statut', 'Compteurs', 'Conducteur', 'Nombre d’inspections, d’OT et de DI'] }" />
+        </div>
+      </div>
+      <ng-container *ngTemplateOutlet="boutonTelecharger; context: { cle: 'parc', libelle: 'Télécharger', desactive: false }" />
+    </section>
+
+    <!-- ── État du stock ────────────────────────────────────────────── -->
+    <section class="flex flex-col rounded-2xl bg-white p-5 shadow-xs ring-1 ring-gray-200/70 sm:p-6">
+      <div class="flex items-start gap-4">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+          </svg>
+        </span>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-base font-semibold text-gray-900">État du stock</h2>
+            <span class="rounded-md bg-green-50 px-1.5 py-0.5 text-[11px] font-medium text-green-700 ring-1 ring-inset ring-green-600/20">.xlsx</span>
+          </div>
+          <p class="mt-0.5 text-sm text-gray-500">Inventaire complet des pièces détachées.</p>
+          <ng-container *ngTemplateOutlet="contenu; context: { $implicit: ['Quantités', 'Seuils minimum', 'Prix unitaires', 'Emplacements', 'Alertes'] }" />
+        </div>
+      </div>
+      <ng-container *ngTemplateOutlet="boutonTelecharger; context: { cle: 'stock', libelle: 'Télécharger', desactive: false }" />
+    </section>
+
+    <!-- ── Historique véhicule ──────────────────────────────────────── -->
+    <section class="flex flex-col rounded-2xl bg-white p-5 shadow-xs ring-1 ring-gray-200/70 sm:p-6 lg:col-span-2">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-end">
+        <div class="flex flex-1 items-start gap-4">
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600" aria-hidden="true">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 class="text-base font-semibold text-gray-900">Historique d’un véhicule</h2>
+              <span class="rounded-md bg-green-50 px-1.5 py-0.5 text-[11px] font-medium text-green-700 ring-1 ring-inset ring-green-600/20">.xlsx</span>
+            </div>
+            <p class="mt-0.5 text-sm text-gray-500">Tout le dossier d’un véhicule, de sa mise en service à aujourd’hui.</p>
+            <ng-container *ngTemplateOutlet="contenu; context: { $implicit: ['Inspections', 'Ordres de travail', 'Demandes d’intervention'] }" />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end lg:w-[28rem]">
+          <div class="flex-1">
+            <label for="rapport-vehicule" class="text-sm font-medium text-gray-700">Véhicule</label>
+            <select id="rapport-vehicule" [ngModel]="vehiculeId()" (ngModelChange)="vehiculeId.set($event)"
+              class="mt-2 w-full rounded-xl border-0 bg-gray-50 py-2 pl-3 pr-8 text-sm ring-1 ring-inset ring-gray-200 focus:bg-white focus:ring-2 focus:ring-primary-500">
+              <option [ngValue]="null">Choisir un véhicule…</option>
+              @for (v of vehicules(); track v.id) {
+                <option [ngValue]="v.id">{{ v.numeroInterne }} · {{ v.marque }} {{ v.modele }}</option>
+              }
+            </select>
+          </div>
+          <div class="[&>div]:pt-0">
+            <ng-container *ngTemplateOutlet="boutonTelecharger; context: { cle: 'vehicule', libelle: 'Télécharger', desactive: !vehiculeId() }" />
+          </div>
+        </div>
+      </div>
+    </section>
 
   </div>
 </div>

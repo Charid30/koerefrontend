@@ -1,6 +1,12 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { UsersService } from '../../core/services/users.service';
 
@@ -14,30 +20,37 @@ function confirmerMdp(ctrl: AbstractControl): ValidationErrors | null {
   selector: 'app-profil',
   standalone: true,
   imports: [CommonModule, NgClass, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './profil.component.html',
 })
 export class ProfilComponent implements OnInit {
   private auth = inject(AuthService);
-  private svc  = inject(UsersService);
-  private fb   = inject(FormBuilder);
+  private svc = inject(UsersService);
+  private fb = inject(FormBuilder);
 
   user = this.auth.user;
 
-  loading  = signal(false);
-  succes   = signal('');
-  erreur   = signal('');
+  loading = signal(false);
+  succes = signal('');
+  erreur = signal('');
   afficherMdp = signal(false);
 
-  form = this.fb.group({
-    motDePasseActuel:   ['', Validators.required],
-    nouveauMotDePasse:  ['', [Validators.required, Validators.minLength(8)]],
-    confirmerMotDePasse:['', Validators.required],
-  }, { validators: confirmerMdp });
+  form = this.fb.group(
+    {
+      motDePasseActuel: ['', Validators.required],
+      nouveauMotDePasse: ['', [Validators.required, Validators.minLength(8)]],
+      confirmerMotDePasse: ['', Validators.required],
+    },
+    { validators: confirmerMdp },
+  );
 
   ngOnInit() {}
 
   changerMotDePasse() {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.loading.set(true);
     this.succes.set('');
     this.erreur.set('');

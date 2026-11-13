@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, NgClass, DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { VehiculesService } from '../../../core/services/vehicules.service';
@@ -9,6 +9,7 @@ import { Vehicule } from '../../../core/models/vehicule.model';
   selector: 'app-vehicule-detail',
   standalone: true,
   imports: [CommonModule, NgClass, RouterLink, DatePipe, DecimalPipe],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './vehicule-detail.component.html',
 })
 export class VehiculeDetailComponent implements OnInit {
@@ -43,22 +44,34 @@ export class VehiculeDetailComponent implements OnInit {
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.svc.getOne(id).subscribe({
-      next: (v) => { this.vehicule.set(v); this.loading.set(false); },
-      error: () => { this.vehicule.set(null); this.loading.set(false); },
+      next: (v) => {
+        this.vehicule.set(v);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.vehicule.set(null);
+        this.loading.set(false);
+      },
     });
     this.svc.getHistorique(id).subscribe({
-      next: h => this.historique.set(h),
+      next: (h) => this.historique.set(h),
     });
   }
 
-  setOnglet(o: 'infos' | 'inspections' | 'ot' | 'di' | 'maintenance') { this.onglet.set(o); }
+  setOnglet(o: 'infos' | 'inspections' | 'ot' | 'di' | 'maintenance') {
+    this.onglet.set(o);
+  }
   exporterHistorique() {
     const v = this.vehicule();
-    if (v) this.rapports.historiqueVehicule(v.id);
+    if (v) this.rapports.historiqueVehicule(v.id, v.numeroInterne).subscribe();
   }
 
-  typeLabel(t: string) { return this.types.find(x => x.value === t)?.label ?? t; }
-  statutLabel(s: string) { return this.statuts.find(x => x.value === s)?.label ?? s; }
+  typeLabel(t: string) {
+    return this.types.find((x) => x.value === t)?.label ?? t;
+  }
+  statutLabel(s: string) {
+    return this.statuts.find((x) => x.value === s)?.label ?? s;
+  }
   statutClass(s: string): string {
     const m: Record<string, string> = {
       DISPONIBLE: 'bg-green-100 text-green-700',

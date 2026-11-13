@@ -81,7 +81,7 @@
     <!-- Onglet Informations -->
     @if (onglet() === 'infos') {
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="md:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+        <div class="md:col-span-2 bg-white rounded-xl shadow-xs border border-gray-100 p-5 space-y-4">
           <h2 class="font-semibold text-gray-800 text-sm uppercase tracking-wide">Informations générales</h2>
           <div class="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
             <div>
@@ -125,12 +125,12 @@
           }
         </div>
         <div class="space-y-4">
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center">
+          <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 text-center">
             <p class="text-xs text-gray-400 uppercase tracking-wide">Kilométrage</p>
             <p class="text-3xl font-bold text-gray-900 mt-1">{{ vehicule()!.kilometrage | number }}</p>
             <p class="text-xs text-gray-400">km</p>
           </div>
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center">
+          <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 text-center">
             <p class="text-xs text-gray-400 uppercase tracking-wide">Heures moteur</p>
             <p class="text-3xl font-bold text-gray-900 mt-1">{{ vehicule()!.heuresMoteur | number }}</p>
             <p class="text-xs text-gray-400">h</p>
@@ -141,7 +141,7 @@
 
     <!-- Onglet Inspections -->
     @if (onglet() === 'inspections') {
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
         @if (!historique()?.inspections?.length) {
           <p class="text-center py-12 text-gray-400 text-sm">Aucune inspection enregistrée</p>
         } @else {
@@ -183,7 +183,7 @@
 
     <!-- Onglet OT -->
     @if (onglet() === 'ot') {
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
         @if (!historique()?.ordresTravail?.length) {
           <p class="text-center py-12 text-gray-400 text-sm">Aucun ordre de travail</p>
         } @else {
@@ -219,7 +219,7 @@
 
     <!-- Onglet DI -->
     @if (onglet() === 'di') {
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
         @if (!historique()?.demandesIntervention?.length) {
           <p class="text-center py-12 text-gray-400 text-sm">Aucune signalisation de panne</p>
         } @else {
@@ -265,7 +265,7 @@
 
     <!-- Onglet Maintenance -->
     @if (onglet() === 'maintenance') {
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
         @if (!historique()?.plansMaintenances?.length) {
           <p class="text-center py-12 text-gray-400 text-sm">Aucun plan de maintenance actif</p>
         } @else {

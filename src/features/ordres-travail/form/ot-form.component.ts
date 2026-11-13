@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -10,6 +10,7 @@ import { Vehicule } from '../../../core/models/vehicule.model';
   selector: 'app-ot-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './ot-form.component.html',
 })
 export class OtFormComponent implements OnInit {
@@ -23,11 +24,11 @@ export class OtFormComponent implements OnInit {
   vehicules = signal<Vehicule[]>([]);
 
   form = this.fb.group({
-    vehiculeId:        ['', Validators.required],
-    typeMaintenance:   ['CORRECTIVE', Validators.required],
-    datePlanifiee:     [''],
+    vehiculeId: ['', Validators.required],
+    typeMaintenance: ['CORRECTIVE', Validators.required],
+    datePlanifiee: [''],
     prestatireExterne: [''],
-    description:       [''],
+    description: [''],
   });
 
   ngOnInit() {
@@ -37,7 +38,10 @@ export class OtFormComponent implements OnInit {
   }
 
   soumettre() {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.loading.set(true);
     this.erreurServeur.set('');
     const val = this.form.value as any;

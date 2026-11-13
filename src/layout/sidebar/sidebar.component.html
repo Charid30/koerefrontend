@@ -1,12 +1,12 @@
 <aside
-  class="fixed lg:relative inset-y-0 left-0 z-50 flex flex-col h-screen bg-gray-900 text-white transition-all duration-300 lg:translate-x-0"
+  class="fixed lg:relative inset-y-0 left-0 z-50 flex flex-col h-screen bg-primary-950 text-white transition-all duration-300 lg:translate-x-0"
   [class.w-64]="!collapsed()"
   [class.w-16]="collapsed()"
   [class.-translate-x-full]="!layout.mobileOpen()"
   [class.translate-x-0]="layout.mobileOpen()"
 >
   <!-- Logo -->
-  <div class="flex items-center px-4 py-3 border-b border-gray-700">
+  <div class="flex items-center px-4 py-3 border-b border-white/10">
     <img src="logo.png" alt="SOFARY" class="w-9 h-9 shrink-0 object-contain rounded-lg"
       onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'" />
     <div style="display:none" class="w-9 h-9 bg-primary-500 rounded-lg items-center justify-center shrink-0">
@@ -17,7 +17,7 @@
     }
     <button
       (click)="toggleCollapse()"
-      class="ml-auto p-1 rounded hover:bg-gray-700 text-gray-400 hover:text-white hidden lg:block"
+      class="ml-auto p-1 rounded-sm hover:bg-white/10 text-primary-200/70 hover:text-white hidden lg:block"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -27,7 +27,7 @@
     <!-- Bouton fermer sur mobile -->
     <button
       (click)="layout.close()"
-      class="ml-auto p-1 rounded hover:bg-gray-700 text-gray-400 hover:text-white lg:hidden"
+      class="ml-auto p-1 rounded-sm hover:bg-white/10 text-primary-200/70 hover:text-white lg:hidden"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -40,11 +40,11 @@
     @for (item of visibleItems(); track item.route) {
       <a
         [routerLink]="item.route"
-        routerLinkActive="bg-primary-600 text-white"
+        routerLinkActive="bg-primary-600 text-white before:bg-brand-red"
         [routerLinkActiveOptions]="{ exact: item.route === '/tableau-de-bord' }"
-        class="flex items-center px-2 py-2.5 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white group"
+        class="flex items-center px-2 py-2.5 relative rounded-lg text-primary-100/80 hover:bg-white/10 hover:text-white group before:absolute before:left-0 before:inset-y-2 before:w-1 before:rounded-r-full"
       >
-        <span class="w-5 h-5 shrink-0 text-gray-400 group-[.bg-primary-600]:text-white">
+        <span class="w-5 h-5 shrink-0 text-primary-200/70 group-[.bg-primary-600]:text-white">
           <ng-container [ngSwitch]="item.icon">
             <svg *ngSwitchCase="'grid'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
             <svg *ngSwitchCase="'truck'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zm0 0l2-2 2-5H13v7z"/></svg>
@@ -68,7 +68,7 @@
   </nav>
 
   <!-- Profil utilisateur -->
-  <div class="border-t border-gray-700 p-3">
+  <div class="border-t border-white/10 p-3">
     <div class="flex items-center">
       <div class="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center shrink-0">
         <span class="text-white text-xs font-bold">
@@ -78,9 +78,9 @@
       @if (!collapsed()) {
         <div class="ml-2 flex-1 min-w-0">
           <p class="text-sm font-medium text-white truncate">{{ user()?.prenom }} {{ user()?.nom }}</p>
-          <p class="text-xs text-gray-400 truncate">{{ roleLabel() }}</p>
+          <p class="text-xs text-primary-200/70 truncate">{{ roleLabel() }}</p>
         </div>
-        <button (click)="logout()" class="ml-2 p-1 text-gray-400 hover:text-red-400 rounded" title="Déconnexion">
+        <button (click)="logout()" class="ml-2 p-1 text-primary-200/70 hover:text-white rounded-sm" title="Déconnexion">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>

@@ -30,7 +30,7 @@
 
     <!-- Workflow -->
     @if (transitionsDisponibles().length > 0) {
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5">
         <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Changer le statut</h2>
         <div class="flex flex-wrap gap-3">
           @for (t of transitionsDisponibles(); track t) {
@@ -50,13 +50,13 @@
 
     <!-- Infos -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5">
         <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Détails</h2>
         <dl class="space-y-3 text-sm">
           <div class="flex justify-between">
             <dt class="text-gray-400">Type</dt>
             <dd class="font-medium">
-              <span class="px-2 py-0.5 rounded text-xs font-medium"
+              <span class="px-2 py-0.5 rounded-sm text-xs font-medium"
                 [ngClass]="ot()!.typeMaintenance === 'PREVENTIVE' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'">
                 {{ ot()!.typeMaintenance === 'PREVENTIVE' ? 'Préventive' : 'Corrective' }}
               </span>
@@ -89,7 +89,7 @@
         </dl>
       </div>
 
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5">
         <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Coûts & Temps</h2>
         <dl class="space-y-3 text-sm">
           <div class="flex justify-between">
@@ -116,7 +116,7 @@
 
     <!-- Mécaniciens affectés -->
     @if (ot()!.mecaniciens && ot()!.mecaniciens!.length > 0) {
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5">
         <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Mécaniciens affectés</h2>
         <div class="space-y-3">
           @for (m of ot()!.mecaniciens; track m.id) {

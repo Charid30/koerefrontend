@@ -1,0 +1,325 @@
+<div class="p-3 sm:p-6 space-y-6">
+
+  <!-- En-tête avec rôle -->
+  <div class="flex items-start justify-between">
+    <div>
+      <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Tableau de Bord</h1>
+      <p class="text-sm text-gray-500 mt-1">{{ today | date:'EEEE d MMMM yyyy' : '' : 'fr' }}</p>
+    </div>
+    @if (isDirection()) {
+      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Vue Logistique · Lecture seule
+      </span>
+    }
+  </div>
+
+  <!-- Loader -->
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+    </div>
+  }
+
+  @if (!loading() && data()) {
+
+    <!-- KPIs véhicules — tous les rôles -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Disponibles</p>
+        <p class="text-3xl font-bold text-green-600 mt-1">{{ data()!.vehicules.disponibles }}</p>
+        <p class="text-xs text-gray-400 mt-1">sur {{ data()!.vehicules.total }} véhicules</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">En maintenance</p>
+        <p class="text-3xl font-bold text-orange-500 mt-1">{{ data()!.vehicules.enMaintenance }}</p>
+        <p class="text-xs text-gray-400 mt-1">véhicules immobilisés</p>
+      </div>
+
+      <!-- OT en cours : pas pour CHAUFFEUR ni DIRECTION -->
+      @if (!isDirection() && !isChauffeur()) {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">OT en cours</p>
+          <p class="text-3xl font-bold text-blue-600 mt-1">{{ data()!.ordresTravail.enCours }}</p>
+          <p class="text-xs text-gray-400 mt-1">{{ data()!.ordresTravail.enAttente }} en attente</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Alertes stock</p>
+          <p class="text-3xl font-bold mt-1" [class]="data()!.stock.alertesSeuil > 0 ? 'text-red-600' : 'text-gray-700'">
+            {{ data()!.stock.alertesSeuil }}
+          </p>
+          <p class="text-xs text-gray-400 mt-1">pièces sous seuil</p>
+        </div>
+      }
+
+      <!-- KPI Direction : taux de disponibilité -->
+      @if (isDirection()) {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Taux de disponibilité</p>
+          <p class="text-3xl font-bold mt-1"
+            [class]="(data()!.vehicules.disponibles / data()!.vehicules.total * 100) >= 80 ? 'text-green-600' : 'text-orange-500'">
+            {{ data()!.vehicules.total > 0 ? ((data()!.vehicules.disponibles / data()!.vehicules.total * 100) | number:'1.0-0') : 0 }}%
+          </p>
+          <p class="text-xs text-gray-400 mt-1">de la flotte opérationnelle</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">DI urgentes</p>
+          <p class="text-3xl font-bold mt-1"
+            [class]="(data()!.demandesIntervention.urgentes + data()!.demandesIntervention.critiques) > 0 ? 'text-red-600' : 'text-gray-700'">
+            {{ data()!.demandesIntervention.urgentes + data()!.demandesIntervention.critiques }}
+          </p>
+          <p class="text-xs text-gray-400 mt-1">à traiter en priorité</p>
+        </div>
+      }
+
+      <!-- KPI Chauffeur -->
+      @if (isChauffeur()) {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">En circulation</p>
+          <p class="text-3xl font-bold text-blue-600 mt-1">{{ data()!.vehicules.total - data()!.vehicules.disponibles - data()!.vehicules.enMaintenance }}</p>
+          <p class="text-xs text-gray-400 mt-1">en mission</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">DI signalées</p>
+          <p class="text-3xl font-bold text-gray-700 mt-1">{{ data()!.demandesIntervention.urgentes + data()!.demandesIntervention.critiques }}</p>
+          <p class="text-xs text-gray-400 mt-1">en attente de traitement</p>
+        </div>
+      }
+    </div>
+
+    <!-- Section Mécanicien : uniquement ses OT -->
+    @if (isMecanicien()) {
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h2 class="font-semibold text-gray-800">Mes Ordres de Travail</h2>
+          <a routerLink="/ordres-travail" class="text-xs text-primary-600 hover:underline">Voir tout</a>
+        </div>
+        <div class="divide-y divide-gray-50">
+          @for (ot of data()!.otRecents; track ot.id) {
+            <div class="px-5 py-3 flex items-center gap-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" [ngClass]="statutClass(ot.statut)">
+                {{ statutLabel(ot.statut) }}
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-gray-800 truncate">{{ ot.numeroOT }} · {{ ot.vehicule }}</p>
+                <p class="text-xs text-gray-400">{{ ot.typeMaintenance === 'PREVENTIVE' ? 'Préventive' : 'Corrective' }}</p>
+              </div>
+            </div>
+          } @empty {
+            <p class="px-5 py-8 text-sm text-gray-400 text-center">Aucun OT en cours</p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Section standard (ADMIN, RESP_PARC, RESP_MAINT) -->
+    @if (!isMecanicien() && !isChauffeur() && !isDirection()) {
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- OT récents -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="font-semibold text-gray-800">Ordres de Travail récents</h2>
+            <a routerLink="/ordres-travail" class="text-xs text-primary-600 hover:underline">Voir tout</a>
+          </div>
+          <div class="divide-y divide-gray-50">
+            @for (ot of data()!.otRecents; track ot.id) {
+              <div class="px-5 py-3 flex items-center gap-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" [ngClass]="statutClass(ot.statut)">
+                  {{ statutLabel(ot.statut) }}
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium text-gray-800 truncate">{{ ot.numeroOT }} · {{ ot.vehicule }}</p>
+                  <p class="text-xs text-gray-400">{{ ot.typeMaintenance === 'PREVENTIVE' ? 'Préventive' : 'Corrective' }}</p>
+                </div>
+                @if (ot.datePlanifiee) {
+                  <p class="text-xs text-gray-400 shrink-0">{{ ot.datePlanifiee | date:'dd/MM' }}</p>
+                }
+              </div>
+            } @empty {
+              <p class="px-5 py-6 text-sm text-gray-400 text-center">Aucun OT récent</p>
+            }
+          </div>
+        </div>
+
+        <!-- Prochaines maintenances -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="font-semibold text-gray-800">Prochaines maintenances</h2>
+            <a routerLink="/maintenance" class="text-xs text-primary-600 hover:underline">Planifier</a>
+          </div>
+          <div class="divide-y divide-gray-50">
+            @for (m of data()!.prochainesMaintenances; track m.vehiculeId) {
+              <div class="px-5 py-3">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-gray-800 truncate">{{ m.vehicule }}</p>
+                    <p class="text-xs text-gray-500">{{ m.typeOperation }}</p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    @if (m.prochaineExecutionDate) {
+                      <p class="text-xs font-medium text-gray-700">{{ m.prochaineExecutionDate | date:'dd/MM/yy' }}</p>
+                    }
+                    @if (m.prochaineExecutionKm) {
+                      <p class="text-xs text-gray-400">{{ m.prochaineExecutionKm | number }} km</p>
+                    }
+                  </div>
+                </div>
+              </div>
+            } @empty {
+              <p class="px-5 py-6 text-sm text-gray-400 text-center">Aucune maintenance planifiée</p>
+            }
+          </div>
+        </div>
+
+      </div>
+    }
+
+    <!-- Vue Direction : résumé stratégique -->
+    @if (isDirection()) {
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Répartition flotte -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+          <h2 class="font-semibold text-gray-800">Répartition de la flotte</h2>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <div class="w-2 h-2 rounded-full bg-green-500"></div>
+              <span class="text-sm text-gray-600 flex-1">Disponibles</span>
+              <span class="font-semibold text-gray-800">{{ data()!.vehicules.disponibles }}</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+              <span class="text-sm text-gray-600 flex-1">En maintenance</span>
+              <span class="font-semibold text-gray-800">{{ data()!.vehicules.enMaintenance }}</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span class="text-sm text-gray-600 flex-1">En circulation</span>
+              <span class="font-semibold text-gray-800">{{ data()!.vehicules.total - data()!.vehicules.disponibles - data()!.vehicules.enMaintenance }}</span>
+            </div>
+            <div class="border-t border-gray-100 pt-3 flex items-center gap-3">
+              <div class="w-2 h-2 rounded-full bg-gray-400"></div>
+              <span class="text-sm font-medium text-gray-700 flex-1">Total parc</span>
+              <span class="font-bold text-gray-900">{{ data()!.vehicules.total }}</span>
+            </div>
+          </div>
+          <a routerLink="/vehicules" class="inline-block text-xs text-primary-600 hover:underline mt-2">
+            Voir l'état du parc →
+          </a>
+        </div>
+
+        <!-- Indicateurs maintenance -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+          <h2 class="font-semibold text-gray-800">Indicateurs Maintenance</h2>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">OT en cours</span>
+              <span class="text-sm font-semibold text-blue-600">{{ data()!.ordresTravail.enCours }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">OT en attente de validation</span>
+              <span class="text-sm font-semibold text-yellow-600">{{ data()!.ordresTravail.enAttente }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">DI critiques non traitées</span>
+              <span class="text-sm font-semibold"
+                [class]="data()!.demandesIntervention.critiques > 0 ? 'text-red-600' : 'text-green-600'">
+                {{ data()!.demandesIntervention.critiques }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600">DI urgentes non traitées</span>
+              <span class="text-sm font-semibold"
+                [class]="data()!.demandesIntervention.urgentes > 0 ? 'text-orange-600' : 'text-green-600'">
+                {{ data()!.demandesIntervention.urgentes }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+              <span class="text-sm text-gray-600">Pièces sous seuil d'alerte</span>
+              <span class="text-sm font-semibold"
+                [class]="data()!.stock.alertesSeuil > 0 ? 'text-red-600' : 'text-green-600'">
+                {{ data()!.stock.alertesSeuil }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    }
+
+    <!-- Alertes maintenance préventive -->
+    @if (!isChauffeur() && !isDirection() && maintenancesUrgentes().length > 0) {
+      <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start gap-3">
+        <svg class="w-5 h-5 text-orange-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-orange-800">
+            {{ maintenancesUrgentes().length }} maintenance(s) préventive(s) à échéance dans 14 jours
+          </p>
+          <div class="mt-1.5 space-y-0.5">
+            @for (m of maintenancesUrgentes(); track m.vehiculeId) {
+              <p class="text-xs text-orange-700">
+                • {{ m.vehicule }} — {{ m.typeOperation }}
+                @if (m.prochaineExecutionDate) {
+                  · {{ m.prochaineExecutionDate | date:'dd/MM/yyyy' }}
+                }
+              </p>
+            }
+          </div>
+          <a routerLink="/maintenance" class="text-xs text-orange-700 font-semibold hover:underline mt-1.5 inline-block">
+            Gérer les maintenances →
+          </a>
+        </div>
+      </div>
+    }
+
+    <!-- Alertes DI — tous sauf CHAUFFEUR (pas de lien OT) -->
+    @if (!isChauffeur() && (data()!.demandesIntervention.urgentes > 0 || data()!.demandesIntervention.critiques > 0)) {
+      <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+        <svg class="w-5 h-5 text-red-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        <div>
+          <p class="text-sm font-semibold text-red-800">
+            {{ data()!.demandesIntervention.critiques }} DI critique(s) et
+            {{ data()!.demandesIntervention.urgentes }} urgente(s) en attente
+          </p>
+          @if (!isDirection()) {
+            <a routerLink="/demandes-intervention" class="text-xs text-red-600 hover:underline mt-0.5 block">
+              Traiter maintenant →
+            </a>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Vue Chauffeur : inspections récentes -->
+    @if (isChauffeur()) {
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h2 class="font-semibold text-gray-800">Départ rapide</h2>
+          <a routerLink="/inspections/nouveau" class="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-700">
+            Nouvelle inspection pré-départ
+          </a>
+        </div>
+        <div class="px-5 py-4">
+          <p class="text-sm text-gray-500">Effectuez votre inspection pré-départ avant chaque mission. En cas d'anomalie, elle sera automatiquement signalée à l'équipe de maintenance.</p>
+        </div>
+      </div>
+    }
+
+  }
+
+  <!-- Erreur -->
+  @if (error()) {
+    <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+      Impossible de charger le tableau de bord. Vérifiez la connexion au serveur.
+    </div>
+  }
+
+</div>

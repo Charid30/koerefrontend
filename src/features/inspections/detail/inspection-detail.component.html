@@ -1,0 +1,153 @@
+<div class="p-6 max-w-4xl mx-auto space-y-6">
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+    </div>
+  }
+  @if (inspection()) {
+    <div class="flex items-center gap-3">
+      <a routerLink="/inspections" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <h1 class="text-2xl font-bold text-gray-900">Inspection #{{ inspection()!.id }}</h1>
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+        [ngClass]="statutClass(inspection()!.statut)">
+        {{ statutLabel(inspection()!.statut) }}
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="md:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Informations</h2>
+        <dl class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <dt class="text-xs text-gray-400">Véhicule</dt>
+            <dd class="font-medium text-gray-800">
+              @if (inspection()!.vehicule) {
+                {{ inspection()!.vehicule!.marque }} {{ inspection()!.vehicule!.modele }}
+                <span class="text-gray-400 font-mono text-xs ml-1">({{ inspection()!.vehicule!.numeroInterne }})</span>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs text-gray-400">Type</dt>
+            <dd class="font-medium text-gray-800">{{ typeLabel(inspection()!.typeInspection) }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-gray-400">Date</dt>
+            <dd class="font-medium text-gray-800">{{ inspection()!.dateInspection | date:'dd/MM/yyyy HH:mm' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-gray-400">Inspecteur</dt>
+            <dd class="font-medium text-gray-800">
+              @if (inspection()!.inspecteur) {
+                {{ inspection()!.inspecteur!.prenom }} {{ inspection()!.inspecteur!.nom }}
+              }
+            </dd>
+          </div>
+          @if (inspection()!.kilometrageReleve) {
+            <div>
+              <dt class="text-xs text-gray-400">Kilométrage relevé</dt>
+              <dd class="font-medium text-gray-800">{{ inspection()!.kilometrageReleve | number }} km</dd>
+            </div>
+          }
+          @if (inspection()!.heuresMoteurReleve) {
+            <div>
+              <dt class="text-xs text-gray-400">Heures moteur relevées</dt>
+              <dd class="font-medium text-gray-800">{{ inspection()!.heuresMoteurReleve | number }} h</dd>
+            </div>
+          }
+          @if (inspection()!.notes) {
+            <div class="col-span-2">
+              <dt class="text-xs text-gray-400">Notes</dt>
+              <dd class="text-gray-700">{{ inspection()!.notes }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+
+      <!-- Résumé items + note globale -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-3">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Résumé</h2>
+        @if (inspection()!.noteGlobale !== null && inspection()!.noteGlobale !== undefined) {
+          <div class="flex items-center justify-center py-2">
+            <div class="text-center">
+              <div class="text-3xl font-bold"
+                [ngClass]="{
+                  'text-green-600':  inspection()!.noteGlobale! >= 16,
+                  'text-yellow-600': inspection()!.noteGlobale! >= 12 && inspection()!.noteGlobale! < 16,
+                  'text-orange-600': inspection()!.noteGlobale! >= 8  && inspection()!.noteGlobale! < 12,
+                  'text-red-600':    inspection()!.noteGlobale! < 8
+                }">
+                {{ inspection()!.noteGlobale }}
+              </div>
+              <div class="text-xs text-gray-400">/ 20</div>
+              <div class="text-xs font-medium mt-1"
+                [ngClass]="{
+                  'text-green-600':  inspection()!.noteGlobale! >= 16,
+                  'text-yellow-600': inspection()!.noteGlobale! >= 12 && inspection()!.noteGlobale! < 16,
+                  'text-orange-600': inspection()!.noteGlobale! >= 8  && inspection()!.noteGlobale! < 12,
+                  'text-red-600':    inspection()!.noteGlobale! < 8
+                }">
+                {{ inspection()!.noteGlobale! >= 16 ? 'Conforme' :
+                   inspection()!.noteGlobale! >= 12 ? 'Satisfaisant' :
+                   inspection()!.noteGlobale! >= 8  ? 'À améliorer' : 'Non conforme' }}
+              </div>
+            </div>
+          </div>
+          <div class="border-t border-gray-100 pt-3"></div>
+        }
+        <div class="flex justify-between text-sm">
+          <span class="text-green-600 font-medium">✓ OUI</span>
+          <span class="font-bold">{{ countResultat('OK') }}</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-red-600 font-medium">✗ NON</span>
+          <span class="font-bold">{{ countResultat('KO') }}</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500 font-medium">N/A</span>
+          <span class="font-bold">{{ countResultat('NA') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Points de contrôle -->
+    @if (inspection()!.items && inspection()!.items!.length > 0) {
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100">
+          <h2 class="font-semibold text-gray-800">Points de contrôle</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Catégorie</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Point</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Résultat</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Observation</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              @for (item of inspection()!.items; track $index) {
+                <tr>
+                  <td class="px-4 py-2.5 text-gray-500 text-xs">{{ item.categorie }}</td>
+                  <td class="px-4 py-2.5 text-gray-800">{{ item.libelle }}</td>
+                  <td class="px-4 py-2.5">
+                    <span class="font-semibold text-xs"
+                      [ngClass]="item.resultat === 'OK' ? 'text-green-600' : item.resultat === 'KO' ? 'text-red-600' : 'text-gray-500'">
+                      {{ item.resultat === 'KO' ? 'NON' : item.resultat === 'NA' ? 'N/A' : item.resultat }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2.5 text-gray-500 text-xs">{{ item.observation ?? 'N/R' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  }
+</div>

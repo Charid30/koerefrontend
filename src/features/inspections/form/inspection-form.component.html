@@ -1,0 +1,178 @@
+<div class="p-6 max-w-4xl mx-auto space-y-6">
+
+  <div class="flex items-center gap-3">
+    <a routerLink="/inspections" class="text-gray-400 hover:text-gray-600">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900">Nouvelle Inspection</h1>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="soumettre()" class="space-y-5">
+
+    <!-- Informations générales -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Informations</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Véhicule / Engin <span class="text-red-500">*</span></label>
+          <select formControlName="vehiculeId" class="form-select w-full rounded-lg border-gray-200 text-sm">
+            <option value="">Sélectionner...</option>
+            @for (v of vehicules(); track v.id) {
+              <option [value]="v.id">{{ v.marque }} {{ v.modele }} ({{ v.numeroInterne }})</option>
+            }
+          </select>
+          @if (vehiculeSelectionne()) {
+            <p class="mt-1 text-xs text-blue-600">
+              Fiche : {{ vehiculeSelectionne()!.typeVehicule | titlecase }} ·
+              {{ estEnginHeure() ? 'Compteur heures moteur' : 'Compteur km' }}
+            </p>
+          }
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Type d'inspection <span class="text-red-500">*</span></label>
+          <select formControlName="typeInspection" class="form-select w-full rounded-lg border-gray-200 text-sm">
+            @for (t of types; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Date & heure <span class="text-red-500">*</span></label>
+          <input type="datetime-local" formControlName="dateInspection"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+
+        @if (estEnginHeure()) {
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Heures moteur relevées</label>
+            <input type="number" formControlName="heuresMoteurReleve" min="0"
+              class="form-input w-full rounded-lg border-gray-200 text-sm" placeholder="ex: 506" />
+          </div>
+        } @else {
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Kilométrage relevé</label>
+            <input type="number" formControlName="kilometrageReleve" min="0"
+              class="form-input w-full rounded-lg border-gray-200 text-sm" placeholder="ex: 27320" />
+          </div>
+        }
+
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Notes générales</label>
+          <textarea formControlName="notes" rows="2" class="form-textarea w-full rounded-lg border-gray-200 text-sm resize-none"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Points de contrôle -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Points de contrôle</h2>
+        <button type="button" (click)="ajouterItem()"
+          class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+          + Ajouter un point
+        </button>
+      </div>
+
+      @if (!vehiculeSelectionne() && itemsArray.length === 0) {
+        <div class="text-center py-8 text-gray-400">
+          <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <p class="text-sm">Sélectionnez un véhicule pour charger la fiche de contrôle correspondante</p>
+        </div>
+      }
+
+      <div class="space-y-1" formArrayName="items">
+        @for (item of itemsArray.controls; track $index; let i = $index) {
+          <div [formGroupName]="i">
+            <!-- Séparateur de catégorie si nouvelle catégorie -->
+            @if (i === 0 || item.get('categorie')?.value !== itemsArray.at(i-1).get('categorie')?.value) {
+              <div class="mt-3 mb-1 px-1">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ item.get('categorie')?.value }}</span>
+              </div>
+            }
+            <div class="grid grid-cols-12 gap-2 items-center bg-gray-50 rounded-lg px-3 py-2">
+              <div class="col-span-5">
+                <input type="text" formControlName="libelle" placeholder="Point à contrôler"
+                  class="form-input w-full rounded border-gray-200 text-xs bg-white" />
+              </div>
+              <div class="col-span-2">
+                <select formControlName="resultat" class="form-select w-full rounded border-gray-200 text-xs font-semibold"
+                  [ngClass]="{
+                    'text-green-700 bg-green-50': item.get('resultat')?.value === 'OK',
+                    'text-red-700 bg-red-50':   item.get('resultat')?.value === 'KO',
+                    'text-gray-500':             item.get('resultat')?.value === 'NA'
+                  }">
+                  <option value="OK">✓ OUI</option>
+                  <option value="KO">✗ NON</option>
+                  <option value="NA">N/A</option>
+                </select>
+              </div>
+              <div class="col-span-4">
+                <input type="text" formControlName="observation" placeholder="Actions correctives requises"
+                  class="form-input w-full rounded border-gray-200 text-xs" />
+              </div>
+              <div class="col-span-1 flex justify-center">
+                <button type="button" (click)="supprimerItem(i)" class="text-gray-300 hover:text-red-500 transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Évaluation finale -->
+    @if (itemsArray.length > 0) {
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Évaluation finale</h2>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
+            <label class="text-sm font-medium text-gray-700">Note Globale</label>
+            <div class="flex items-center gap-2">
+              <input type="number" formControlName="noteGlobale" min="0" max="20"
+                class="form-input w-20 rounded-lg border-gray-200 text-center text-lg font-bold" placeholder="—" />
+              <span class="text-gray-500 font-semibold">/&nbsp;20</span>
+            </div>
+          </div>
+          @if (form.get('noteGlobale')?.value !== null) {
+            <span class="text-xs px-2 py-1 rounded-full font-medium"
+              [ngClass]="{
+                'bg-green-100 text-green-700':   (form.get('noteGlobale')?.value ?? 0) >= 16,
+                'bg-yellow-100 text-yellow-700': (form.get('noteGlobale')?.value ?? 0) >= 12 && (form.get('noteGlobale')?.value ?? 0) < 16,
+                'bg-orange-100 text-orange-700': (form.get('noteGlobale')?.value ?? 0) >= 8  && (form.get('noteGlobale')?.value ?? 0) < 12,
+                'bg-red-100 text-red-700':       (form.get('noteGlobale')?.value ?? 0) < 8
+              }">
+              {{ (form.get('noteGlobale')?.value ?? 0) >= 16 ? 'Conforme' :
+                 (form.get('noteGlobale')?.value ?? 0) >= 12 ? 'Satisfaisant' :
+                 (form.get('noteGlobale')?.value ?? 0) >= 8  ? 'À améliorer' : 'Non conforme' }}
+            </span>
+          }
+        </div>
+      </div>
+    }
+
+    @if (erreurServeur()) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">{{ erreurServeur() }}</div>
+    }
+
+    <div class="flex items-center justify-end gap-3">
+      <a routerLink="/inspections" class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+        Annuler
+      </a>
+      <button type="submit" [disabled]="loading()"
+        class="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60">
+        @if (loading()) {
+          <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        }
+        Enregistrer l'inspection
+      </button>
+    </div>
+
+  </form>
+</div>

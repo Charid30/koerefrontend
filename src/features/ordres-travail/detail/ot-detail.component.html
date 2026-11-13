@@ -1,0 +1,149 @@
+<div class="p-6 max-w-5xl mx-auto space-y-6">
+
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+    </div>
+  }
+
+  @if (ot()) {
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <a routerLink="/ordres-travail" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </a>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 font-mono">{{ ot()!.numeroOT }}</h1>
+          <p class="text-sm text-gray-500">
+            @if (ot()!.vehicule) { {{ ot()!.vehicule!.marque }} {{ ot()!.vehicule!.modele }} · {{ ot()!.vehicule!.immatriculation }} }
+          </p>
+        </div>
+      </div>
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold"
+        [ngClass]="statutClass(ot()!.statut)">
+        {{ statutLabel(ot()!.statut) }}
+      </span>
+    </div>
+
+    <!-- Workflow -->
+    @if (transitionsDisponibles().length > 0) {
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Changer le statut</h2>
+        <div class="flex flex-wrap gap-3">
+          @for (t of transitionsDisponibles(); track t) {
+            <button (click)="changerStatut(t)"
+              [disabled]="actionLoading()"
+              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50"
+              [ngClass]="transitionClass(t)">
+              {{ statutLabel(t) }} →
+            </button>
+          }
+        </div>
+        @if (erreurAction()) {
+          <p class="text-sm text-red-600 mt-3">{{ erreurAction() }}</p>
+        }
+      </div>
+    }
+
+    <!-- Infos -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Détails</h2>
+        <dl class="space-y-3 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-gray-400">Type</dt>
+            <dd class="font-medium">
+              <span class="px-2 py-0.5 rounded text-xs font-medium"
+                [ngClass]="ot()!.typeMaintenance === 'PREVENTIVE' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'">
+                {{ ot()!.typeMaintenance === 'PREVENTIVE' ? 'Préventive' : 'Corrective' }}
+              </span>
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-400">Responsable</dt>
+            <dd class="font-medium">
+              @if (ot()!.responsable) { {{ ot()!.responsable!.prenom }} {{ ot()!.responsable!.nom }} }
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-400">Date planifiée</dt>
+            <dd class="font-medium">{{ ot()!.datePlanifiee ? (ot()!.datePlanifiee | date:'dd/MM/yyyy') : 'N/R' }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-400">Début effectif</dt>
+            <dd class="font-medium">{{ ot()!.dateDebut ? (ot()!.dateDebut | date:'dd/MM/yyyy') : 'N/R' }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-400">Fin effectif</dt>
+            <dd class="font-medium">{{ ot()!.dateFin ? (ot()!.dateFin | date:'dd/MM/yyyy') : 'N/R' }}</dd>
+          </div>
+          @if (ot()!.prestatireExterne) {
+            <div class="flex justify-between">
+              <dt class="text-gray-400">Prestataire</dt>
+              <dd class="font-medium">{{ ot()!.prestatireExterne }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Coûts & Temps</h2>
+        <dl class="space-y-3 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-gray-400">Heures internes</dt>
+            <dd class="font-medium">{{ ot()!.heuresInternesTotal ?? 0 }} h</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-400">Coût pièces</dt>
+            <dd class="font-medium">{{ (ot()!.coutPiecesTotal ?? 0) | number:'1.0-0' }} FCFA</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-400">Coût prestataire</dt>
+            <dd class="font-medium">{{ (ot()!.coutPrestataire ?? 0) | number:'1.0-0' }} FCFA</dd>
+          </div>
+        </dl>
+        @if (ot()!.description) {
+          <div class="mt-4 pt-4 border-t border-gray-100">
+            <p class="text-xs text-gray-400 mb-1">Description</p>
+            <p class="text-sm text-gray-700">{{ ot()!.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Mécaniciens affectés -->
+    @if (ot()!.mecaniciens && ot()!.mecaniciens!.length > 0) {
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Mécaniciens affectés</h2>
+        <div class="space-y-3">
+          @for (m of ot()!.mecaniciens; track m.id) {
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="font-medium text-gray-800">
+                  @if (m.mecanicien) { {{ m.mecanicien.prenom }} {{ m.mecanicien.nom }} }
+                </p>
+                @if (m.travauxEffectues) {
+                  <p class="text-sm text-gray-500">{{ m.travauxEffectues }}</p>
+                }
+              </div>
+              @if (m.tempsPasse) {
+                <span class="text-sm text-gray-500">{{ m.tempsPasse }} h</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Notes de contrôle -->
+    @if (ot()!.notesControle) {
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <p class="text-sm font-semibold text-amber-800 mb-1">Notes de contrôle</p>
+        <p class="text-sm text-amber-700">{{ ot()!.notesControle }}</p>
+      </div>
+    }
+  }
+</div>

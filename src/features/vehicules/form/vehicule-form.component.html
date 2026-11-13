@@ -1,0 +1,199 @@
+<div class="p-6 max-w-3xl mx-auto space-y-6">
+
+  <!-- En-tête -->
+  <div class="flex items-center gap-3">
+    <a routerLink="/vehicules" class="text-gray-400 hover:text-gray-600 shrink-0">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900">
+      {{ isEdit ? 'Modifier le véhicule' : 'Nouveau véhicule' }}
+    </h1>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="soumettre()" class="space-y-5">
+
+    <!-- Identification -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">N° Interne <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="numeroInterne" placeholder="VH-001"
+            class="form-input w-full rounded-lg border-gray-200 text-sm"
+            [class.border-red-400]="touched('numeroInterne')" />
+          @if (touched('numeroInterne')) {
+            <p class="text-xs text-red-500 mt-0.5">Champ obligatoire</p>
+          }
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Immatriculation <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="immatriculation" placeholder="11 A 0001 BF"
+            class="form-input w-full rounded-lg border-gray-200 text-sm"
+            [class.border-red-400]="touched('immatriculation')" />
+          @if (touched('immatriculation')) {
+            <p class="text-xs text-red-500 mt-0.5">Champ obligatoire</p>
+          }
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Marque <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="marque" placeholder="Toyota"
+            class="form-input w-full rounded-lg border-gray-200 text-sm"
+            [class.border-red-400]="touched('marque')" />
+          @if (touched('marque')) {
+            <p class="text-xs text-red-500 mt-0.5">Champ obligatoire</p>
+          }
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Modèle <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="modele" placeholder="Land Cruiser"
+            class="form-input w-full rounded-lg border-gray-200 text-sm"
+            [class.border-red-400]="touched('modele')" />
+          @if (touched('modele')) {
+            <p class="text-xs text-red-500 mt-0.5">Champ obligatoire</p>
+          }
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Type de véhicule <span class="text-red-500">*</span></label>
+          <select formControlName="typeVehicule" class="form-select w-full rounded-lg border-gray-200 text-sm">
+            <option value="">Sélectionner...</option>
+            @for (t of types; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">N° de série <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="numeroSerie" class="form-input w-full rounded-lg border-gray-200 text-sm"
+            [class.border-red-400]="form.get('numeroSerie')?.invalid && form.get('numeroSerie')?.touched"/>
+          @if (form.get('numeroSerie')?.invalid && form.get('numeroSerie')?.touched) {
+            <p class="text-xs text-red-500 mt-0.5">Obligatoire</p>
+          }
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Caractéristiques -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Caractéristiques</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Année</label>
+          <input type="number" formControlName="annee" placeholder="2024" min="1990" max="2030"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Carburant</label>
+          <select formControlName="carburant" class="form-select w-full rounded-lg border-gray-200 text-sm">
+            <option value="">Choisir...</option>
+            @for (c of carburants; track c.value) {
+              <option [value]="c.value">{{ c.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Couleur</label>
+          <input type="text" formControlName="couleur" placeholder="Blanc"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Kilométrage initial</label>
+          <input type="number" formControlName="kilometrage" placeholder="0" min="0"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Heures moteur</label>
+          <input type="number" formControlName="heuresMoteur" placeholder="0" min="0"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Date d'acquisition</label>
+          <input type="date" formControlName="dateAcquisition"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Affectation -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Affectation</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Entité (ville)</label>
+          <input formControlName="entite" type="text" list="entites-form" placeholder="Ex : Ouagadougou"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+          <datalist id="entites-form">
+            @for (e of entites(); track e) { <option [value]="e"></option> }
+          </datalist>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Département</label>
+          <input type="text" formControlName="departement" placeholder="Direction, Logistique…"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Site géographique</label>
+          <input type="text" formControlName="siteGeographique"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Statut</label>
+          <select formControlName="statut" class="form-select w-full rounded-lg border-gray-200 text-sm">
+            @for (s of statuts; track s.value) {
+              <option [value]="s.value">{{ s.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+          <textarea formControlName="notes" rows="3" placeholder="Informations complémentaires…"
+            class="form-textarea w-full rounded-lg border-gray-200 text-sm resize-none"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Erreur serveur -->
+    @if (erreurServeur()) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+        {{ erreurServeur() }}
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3">
+      <a routerLink="/vehicules"
+        class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+        Annuler
+      </a>
+      <button type="submit" [disabled]="loading()"
+        class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-60 transition-colors">
+        @if (loading()) {
+          <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        }
+        {{ isEdit ? 'Enregistrer les modifications' : 'Créer le véhicule' }}
+      </button>
+    </div>
+
+  </form>
+</div>

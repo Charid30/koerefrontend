@@ -1,0 +1,571 @@
+<div class="p-3 sm:p-6 space-y-5">
+
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Stocks & Pièces</h1>
+      <p class="text-sm text-gray-500 mt-0.5">{{ total() }} références</p>
+    </div>
+    <button (click)="ouvrirModal()"
+      class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl shadow hover:bg-primary-700 transition-colors">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nouvelle pièce
+    </button>
+  </div>
+
+  <!-- Alertes stock -->
+  @if (alertes().length > 0) {
+    <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+      <p class="text-sm font-semibold text-red-800 mb-2">
+        {{ alertes().length }} pièce(s) sous le seuil minimum
+      </p>
+      <div class="flex flex-wrap gap-2">
+        @for (a of alertes(); track a.id) {
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 text-red-700 text-xs rounded-lg">
+            {{ a.designation }}
+            <span class="font-bold">({{ a.quantiteDisponible }}/{{ a.quantiteMinimum }})</span>
+          </span>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    @if (loading()) {
+      <div class="flex items-center justify-center py-16">
+        <div class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+      </div>
+    } @else if (pieces().length === 0) {
+      <div class="py-16 text-center">
+        <p class="text-gray-400">Aucune pièce en stock</p>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Référence</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Désignation</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Catégorie</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Qté dispo</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Seuil min</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Prix unit.</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            @for (p of pieces(); track p.id) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-4 py-3 font-mono text-xs text-gray-600">{{ p.reference }}</td>
+                <td class="px-4 py-3">
+                  <p class="font-medium text-gray-800">{{ p.designation }}</p>
+                  @if (p.marque) { <p class="text-xs text-gray-400">{{ p.marque }}</p> }
+                </td>
+                <td class="px-4 py-3 text-gray-500">{{ p.categorie ?? 'N/R' }}</td>
+                <td class="px-4 py-3 text-center">
+                  <span class="font-bold text-base" [ngClass]="stockClass(p)">{{ p.quantiteDisponible }}</span>
+                  <span class="text-xs text-gray-400 ml-1">{{ p.unite }}</span>
+                </td>
+                <td class="px-4 py-3 text-center text-gray-500">{{ p.quantiteMinimum }}</td>
+                <td class="px-4 py-3 text-right text-gray-700">
+                  {{ p.prixUnitaire ? ((p.prixUnitaire | number:'1.0-0') + ' FCFA') : 'N/R' }}
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <div class="flex items-center justify-end gap-1">
+                    <!-- Historique mouvements -->
+                    <button (click)="ouvrirHistorique(p)" title="Historique des mouvements"
+                      class="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </button>
+                    <!-- Mouvement de stock -->
+                    <button (click)="ouvrirMouvement(p)" title="Enregistrer un mouvement"
+                      class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                      </svg>
+                    </button>
+                    <!-- Modifier -->
+                    <button (click)="ouvrirEdit(p)" title="Modifier"
+                      class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                      </svg>
+                    </button>
+                    <!-- Supprimer -->
+                    <button (click)="supprimerPiece(p)" title="Supprimer"
+                      class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (totalPages() > 1) {
+        <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+          <span>Page {{ page() }} sur {{ totalPages() }}</span>
+          <div class="flex gap-2">
+            <button [disabled]="page() === 1" (click)="goPage(page() - 1)"
+              class="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40">‹</button>
+            <button [disabled]="page() === totalPages()" (click)="goPage(page() + 1)"
+              class="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40">›</button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- ══ Modal Confirmation ════════════════════════════════ -->
+  @if (showConfirm()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900">Confirmation</h3>
+            <p class="text-sm text-gray-500 mt-0.5">{{ confirmMsg() }}</p>
+          </div>
+        </div>
+        <div class="flex gap-3 justify-end">
+          <button (click)="annulerConfirm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Annuler</button>
+          <button (click)="validerConfirm()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ══ Wizard Pièce ════════════════════════════════════ -->
+  @if (showModal()) {
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4"
+         (click)="fermerModal()">
+      <div class="bg-white w-full sm:rounded-2xl sm:shadow-2xl sm:max-w-lg flex flex-col max-h-screen sm:max-h-[90vh]"
+           (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+        <div class="px-6 pt-5 pb-4 border-b border-gray-100">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="text-lg font-bold text-gray-900">Nouvelle pièce</h2>
+              <p class="text-xs text-gray-400 mt-0.5">{{ etape() }}/2 — {{ etape() === 1 ? 'Identification' : 'Stock & Prix' }}</p>
+            </div>
+            <button (click)="fermerModal()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="flex items-center">
+            @for (s of [{n:1,t:'Identification'},{n:2,t:'Stock & Prix'}]; track s.n) {
+              <div class="flex items-center" [class.flex-1]="s.n < 2">
+                <div class="flex items-center gap-2 shrink-0">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                    [ngClass]="etape() > s.n ? 'bg-primary-600 text-white' : etape() === s.n ? 'bg-primary-600 text-white ring-4 ring-primary-100' : 'bg-gray-100 text-gray-400'">
+                    @if (etape() > s.n) {
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    } @else { {{ s.n }} }
+                  </div>
+                  <span class="text-xs font-medium hidden sm:block" [ngClass]="etape() >= s.n ? 'text-gray-800' : 'text-gray-400'">{{ s.t }}</span>
+                </div>
+                @if (s.n < 2) {
+                  <div class="flex-1 h-0.5 mx-3" [ngClass]="etape() > s.n ? 'bg-primary-600' : 'bg-gray-200'"></div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Contenu -->
+        <form [formGroup]="form" (ngSubmit)="soumettre()" class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+
+          <!-- ÉTAPE 1 -->
+          @if (etape() === 1) {
+            <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Référence <span class="text-red-500">*</span></label>
+                  <input formControlName="reference" type="text" placeholder="REF-0001"
+                    class="w-full border rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    [ngClass]="form.get('reference')?.invalid && form.get('reference')?.touched ? 'border-red-300' : 'border-gray-200'"/>
+                  @if (form.get('reference')?.invalid && form.get('reference')?.touched) {
+                    <p class="text-xs text-red-500 mt-1">Requis</p>
+                  }
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Marque</label>
+                  <input formControlName="marque" type="text" placeholder="Ex : Bosch"
+                    class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Désignation <span class="text-red-500">*</span></label>
+                <input formControlName="designation" type="text" placeholder="Ex : Filtre à huile moteur"
+                  class="w-full border rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                  [ngClass]="form.get('designation')?.invalid && form.get('designation')?.touched ? 'border-red-300' : 'border-gray-200'"/>
+                @if (form.get('designation')?.invalid && form.get('designation')?.touched) {
+                  <p class="text-xs text-red-500 mt-1">Requis</p>
+                }
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Catégorie</label>
+                <input formControlName="categorie" type="text" placeholder="Ex : Filtration, Freinage, Pneumatique…"
+                  class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+              </div>
+            </div>
+          }
+
+          <!-- ÉTAPE 2 -->
+          @if (etape() === 2) {
+            <div class="space-y-3">
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Qté dispo</label>
+                  <input formControlName="quantiteDisponible" type="number" min="0"
+                    class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Seuil min</label>
+                  <input formControlName="quantiteMinimum" type="number" min="0"
+                    class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Unité</label>
+                  <input formControlName="unite" type="text" placeholder="unité, L, kg…"
+                    class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Prix unitaire (FCFA)</label>
+                  <input formControlName="prixUnitaire" type="number" min="0" placeholder="0"
+                    class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Emplacement</label>
+                  <input formControlName="emplacement" type="text" placeholder="Ex : Étagère A3"
+                    class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"/>
+                </div>
+              </div>
+              @if (erreurModal()) {
+                <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{{ erreurModal() }}</div>
+              }
+            </div>
+          }
+
+        </form>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex items-center justify-between">
+          @if (etape() === 1) {
+            <button type="button" (click)="fermerModal()"
+              class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors">
+              Annuler
+            </button>
+            <button type="button" (click)="suivant()"
+              class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-colors">
+              Suivant
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          } @else {
+            <button type="button" (click)="precedent()"
+              class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+              Précédent
+            </button>
+            <button type="button" (click)="soumettre()" [disabled]="modalLoading()"
+              class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 disabled:opacity-50 transition-colors">
+              @if (modalLoading()) {
+                <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              } @else {
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              }
+              Ajouter la pièce
+            </button>
+          }
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- Modal édition pièce (wizard 2 étapes) -->
+  @if (showEditModal()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style="max-height:90vh">
+
+        <!-- Header -->
+        <div class="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-bold text-gray-900">Modifier la pièce</h2>
+              <p class="text-xs text-gray-400 mt-0.5">{{ pieceAEditer()!.reference }} — {{ pieceAEditer()!.designation }}</p>
+            </div>
+            <button (click)="fermerEdit()" class="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Steps indicator -->
+          <div class="flex items-center gap-0">
+            @for (e of editEtapes; track e.num) {
+              <div class="flex items-center" [class.flex-1]="e.num < editNbEtapes">
+                <div class="flex items-center gap-2 shrink-0">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                    [ngClass]="editEtape() > e.num
+                      ? 'bg-primary-600 text-white'
+                      : editEtape() === e.num
+                        ? 'bg-primary-600 text-white ring-4 ring-primary-100'
+                        : 'bg-gray-100 text-gray-400'">
+                    @if (editEtape() > e.num) {
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                      </svg>
+                    } @else {
+                      {{ e.num }}
+                    }
+                  </div>
+                  <span class="text-xs font-medium hidden sm:block"
+                    [ngClass]="editEtape() >= e.num ? 'text-gray-800' : 'text-gray-400'">{{ e.titre }}</span>
+                </div>
+                @if (e.num < editNbEtapes) {
+                  <div class="flex-1 h-0.5 mx-3"
+                    [ngClass]="editEtape() > e.num ? 'bg-primary-600' : 'bg-gray-200'"></div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Contenu -->
+        <form [formGroup]="editForm" class="flex-1 overflow-y-auto px-6 py-5">
+
+          <!-- ÉTAPE 1 : Identification -->
+          @if (editEtape() === 1) {
+            <div class="space-y-4">
+              <p class="text-xs text-gray-400">Les champs marqués <span class="text-red-500">*</span> sont obligatoires</p>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-2">
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Désignation <span class="text-red-500">*</span></label>
+                  <input type="text" formControlName="designation" placeholder="Ex: Filtre à huile"
+                    class="form-input w-full rounded-xl border-gray-200 text-sm"
+                    [class.border-red-400]="editForm.get('designation')?.invalid && editForm.get('designation')?.touched"/>
+                  @if (editForm.get('designation')?.invalid && editForm.get('designation')?.touched) {
+                    <p class="text-xs text-red-500 mt-0.5">Obligatoire</p>
+                  }
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Référence <span class="text-red-500">*</span></label>
+                  <input type="text" formControlName="reference" placeholder="Ex: FH-001"
+                    class="form-input w-full rounded-xl border-gray-200 text-sm"
+                    [class.border-red-400]="editForm.get('reference')?.invalid && editForm.get('reference')?.touched"/>
+                  @if (editForm.get('reference')?.invalid && editForm.get('reference')?.touched) {
+                    <p class="text-xs text-red-500 mt-0.5">Obligatoire</p>
+                  }
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Marque</label>
+                  <input type="text" formControlName="marque" placeholder="Ex: BOSCH"
+                    class="form-input w-full rounded-xl border-gray-200 text-sm"/>
+                </div>
+                <div class="col-span-2">
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Catégorie</label>
+                  <input type="text" formControlName="categorie" placeholder="Ex: Filtration, Freinage…"
+                    class="form-input w-full rounded-xl border-gray-200 text-sm"/>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- ÉTAPE 2 : Stock & Prix -->
+          @if (editEtape() === 2) {
+            <div class="space-y-4">
+              <p class="text-xs text-gray-400">Informations de stock et tarification</p>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Seuil minimum</label>
+                  <input type="number" formControlName="quantiteMinimum" min="0"
+                    class="form-input w-full rounded-xl border-gray-200 text-sm"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Unité</label>
+                  <input type="text" formControlName="unite" placeholder="unité, litre, kg…"
+                    class="form-input w-full rounded-xl border-gray-200 text-sm"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Prix unitaire (FCFA)</label>
+                  <input type="number" formControlName="prixUnitaire" min="0"
+                    class="form-input w-full rounded-xl border-gray-200 text-sm"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Emplacement</label>
+                  <input type="text" formControlName="emplacement" placeholder="Ex: Étagère A3"
+                    class="form-input w-full rounded-xl border-gray-200 text-sm"/>
+                </div>
+              </div>
+              @if (editErreur()) {
+                <p class="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{{ editErreur() }}</p>
+              }
+            </div>
+          }
+
+        </form>
+
+        <!-- Footer navigation -->
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50 rounded-b-2xl shrink-0">
+          <button type="button" (click)="precedentEdit()" [class.invisible]="editEtape() === 1"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-white transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Précédent
+          </button>
+
+          <span class="text-xs text-gray-400">{{ editEtape() }} / {{ editNbEtapes }}</span>
+
+          @if (editEtape() < editNbEtapes) {
+            <button type="button" (click)="suivantEdit()"
+              class="inline-flex items-center gap-1.5 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 transition-colors">
+              Suivant
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          } @else {
+            <button type="button" (click)="sauvegarderEdit()" [disabled]="editLoading()"
+              class="inline-flex items-center gap-2 px-5 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 disabled:opacity-60 transition-colors">
+              @if (editLoading()) {
+                <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              } @else {
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+              }
+              Enregistrer
+            </button>
+          }
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- Modal mouvement -->
+  @if (pieceMouvement()) {
+    <div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+        <h3 class="text-lg font-semibold text-gray-900">Mouvement de stock</h3>
+        <p class="text-sm text-gray-500">{{ pieceMouvement()!.designation }} ({{ pieceMouvement()!.reference }})</p>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Type</label>
+            <select [(ngModel)]="mouvType" class="form-select w-full rounded-lg border-gray-200 text-sm">
+              <option value="ENTREE">Entrée en stock</option>
+              <option value="SORTIE">Sortie de stock</option>
+              <option value="AJUSTEMENT">Ajustement</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Quantité</label>
+            <input type="number" [(ngModel)]="mouvQuantite" min="1" class="form-input w-full rounded-lg border-gray-200 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Motif</label>
+            <input type="text" [(ngModel)]="mouvMotif" placeholder="Motif du mouvement…"
+              class="form-input w-full rounded-lg border-gray-200 text-sm" />
+          </div>
+        </div>
+
+        @if (mouvErreur()) {
+          <p class="text-sm text-red-600">{{ mouvErreur() }}</p>
+        }
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button (click)="fermerMouvement()" class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+            Annuler
+          </button>
+          <button (click)="enregistrerMouvement()" [disabled]="mouvLoading()"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-60">
+            @if (mouvLoading()) {
+              <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            }
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ══ Modal historique mouvements ══════════════════════ -->
+  @if (showHistorique()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+         (click)="fermerHistorique()">
+      <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl flex flex-col max-h-[85vh]"
+           (click)="$event.stopPropagation()">
+
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+          <div>
+            <h3 class="text-base font-bold text-gray-900">Historique — {{ pieceHistorique()?.designation }}</h3>
+            <p class="text-xs text-gray-400">{{ pieceHistorique()?.reference }}</p>
+          </div>
+          <button (click)="fermerHistorique()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-5 py-3">
+          @if (historiqueLoading()) {
+            <div class="flex justify-center py-10">
+              <div class="w-6 h-6 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+            </div>
+          } @else if (historique().length === 0) {
+            <p class="text-center text-sm text-gray-400 py-10">Aucun mouvement enregistré</p>
+          } @else {
+            <div class="divide-y divide-gray-50">
+              @for (m of historique(); track m.id) {
+                <div class="py-3 flex items-center gap-3">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold shrink-0"
+                    [ngClass]="m.typeMouvement === 'ENTREE' ? 'bg-green-100 text-green-700' : m.typeMouvement === 'SORTIE' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'">
+                    {{ m.typeMouvement === 'ENTREE' ? '▲ Entrée' : m.typeMouvement === 'SORTIE' ? '▼ Sortie' : '⇄ Ajust.' }}
+                  </span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-800">
+                      {{ m.typeMouvement === 'SORTIE' ? '-' : '+' }}{{ m.quantite }} {{ pieceHistorique()?.unite }}
+                    </p>
+                    @if (m.motif) {
+                      <p class="text-xs text-gray-500 truncate">{{ m.motif }}</p>
+                    }
+                    @if (m.agent) {
+                      <p class="text-xs text-gray-400">{{ m.agent.prenom }} {{ m.agent.nom }}</p>
+                    }
+                  </div>
+                  <p class="text-xs text-gray-400 shrink-0">{{ m.dateOperation | date:'dd/MM/yy HH:mm' }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-end">
+          <button (click)="fermerHistorique()" class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white">
+            Fermer
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>

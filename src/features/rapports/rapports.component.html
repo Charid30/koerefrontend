@@ -1,0 +1,124 @@
+<div class="p-6 space-y-8 max-w-4xl">
+
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Rapports &amp; Exports</h1>
+    <p class="text-sm text-gray-500 mt-0.5">Téléchargez les rapports au format Excel (.xlsx)</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <!-- État du parc -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zm0 0l2-2 2-5H13v7z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">État du Parc</h3>
+          <p class="text-sm text-gray-500 mt-0.5">Liste complète de tous les véhicules avec statut, compteur, nombre d'OT et DI.</p>
+        </div>
+      </div>
+      <button (click)="telechargerEtatParc()"
+        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Télécharger
+      </button>
+    </div>
+
+    <!-- État du stock -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">État du Stock</h3>
+          <p class="text-sm text-gray-500 mt-0.5">Inventaire complet des pièces avec alertes de seuil minimum.</p>
+        </div>
+      </div>
+      <button (click)="telechargerStock()"
+        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Télécharger
+      </button>
+    </div>
+
+    <!-- Rapport mensuel -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">Rapport Mensuel</h3>
+          <p class="text-sm text-gray-500 mt-0.5">Synthèse OT, coûts, inspections et pièces consommées pour un mois donné.</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <select [(ngModel)]="mois"
+          class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
+          @for (m of moisOptions; track m.value) {
+            <option [value]="m.value">{{ m.label }}</option>
+          }
+        </select>
+        <select [(ngModel)]="annee"
+          class="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
+          @for (a of annees; track a) {
+            <option [value]="a">{{ a }}</option>
+          }
+        </select>
+      </div>
+      <button (click)="telechargerMensuel()"
+        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Télécharger le rapport
+      </button>
+    </div>
+
+    <!-- Historique véhicule -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">Historique Véhicule</h3>
+          <p class="text-sm text-gray-500 mt-0.5">Inspections, OT et DI complets d'un véhicule sélectionné.</p>
+        </div>
+      </div>
+      <select (change)="vehiculeId.set($any($event.target).value ? +$any($event.target).value : null)"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+        <option value="">Choisir un véhicule</option>
+        @for (v of vehicules(); track v.id) {
+          <option [value]="v.id">{{ v.marque }} {{ v.modele }} ({{ v.numeroInterne }})</option>
+        }
+      </select>
+      <button (click)="telechargerHistorique()" [disabled]="!vehiculeId()"
+        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Télécharger l'historique
+      </button>
+    </div>
+
+  </div>
+</div>

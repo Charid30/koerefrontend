@@ -1,0 +1,732 @@
+<div class="p-3 sm:p-6 space-y-5">
+
+  <!-- En-tête -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Parc Véhicules</h1>
+      <p class="text-sm text-gray-500 mt-0.5">{{ total() }} véhicule(s) au total</p>
+    </div>
+    @if (peutCreer()) {
+    <button (click)="ouvrirModal()"
+      class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl shadow hover:bg-primary-700 transition-colors">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nouveau véhicule
+    </button>
+    }
+  </div>
+
+  <!-- Filtres -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <input type="text" placeholder="Rechercher (immat., marque…)" [value]="searchTerm()"
+        (input)="onSearch($event)" class="form-input rounded-lg border-gray-200 text-sm" />
+      <select [value]="filtreStatut()" (change)="onStatutChange($event)"
+        class="form-select rounded-lg border-gray-200 text-sm">
+        <option value="">Tous les statuts</option>
+        @for (s of statuts; track s.value) {
+          <option [value]="s.value">{{ s.label }}</option>
+        }
+      </select>
+      <select [value]="filtreType()" (change)="onTypeChange($event)"
+        class="form-select rounded-lg border-gray-200 text-sm">
+        <option value="">Tous les types</option>
+        @for (t of types; track t.value) {
+          <option [value]="t.value">{{ t.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    @if (loading()) {
+      <div class="flex items-center justify-center py-16">
+        <div class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+      </div>
+    } @else if (vehicules().length === 0) {
+      <div class="py-16 text-center">
+        <svg class="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8zm0 0l2-2h3a1 1 0 001-1V8a1 1 0 00-.293-.707l-2-2A1 1 0 0016 5h-3"/>
+        </svg>
+        <p class="text-gray-400 text-sm">Aucun véhicule trouvé</p>
+        <button (click)="ouvrirModal()" class="mt-2 text-sm text-primary-600 hover:underline">Ajouter le premier</button>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">N° Interne</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Immatriculation</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Marque / Modèle</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Kilométrage</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Statut</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            @for (v of vehicules(); track v.id) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-4 py-3 font-mono text-xs text-gray-700">{{ v.numeroInterne }}</td>
+                <td class="px-4 py-3 font-semibold text-gray-800">{{ v.immatriculation }}</td>
+                <td class="px-4 py-3 text-gray-700">{{ v.marque }} {{ v.modele }}</td>
+                <td class="px-4 py-3 text-gray-500">{{ typeLabel(v.typeVehicule) }}</td>
+                <td class="px-4 py-3 text-gray-700">{{ v.kilometrage | number }} km</td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    [ngClass]="statutClass(v.statut)">{{ statutLabel(v.statut) }}</span>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <div class="flex items-center justify-end gap-1">
+                    <!-- Voir détail -->
+                    <button (click)="ouvrirDetail(v)" title="Voir le détail"
+                      class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                    </button>
+                    <!-- Modifier -->
+                    <button (click)="ouvrirEdit(v)" title="Modifier"
+                      class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                      </svg>
+                    </button>
+                    <!-- Supprimer -->
+                    <button (click)="supprimer(v)" title="Supprimer"
+                      class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (totalPages() > 1) {
+        <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+          <span>Page {{ page() }} sur {{ totalPages() }}</span>
+          <div class="flex gap-2">
+            <button [disabled]="page() === 1" (click)="goPage(page() - 1)"
+              class="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">‹</button>
+            <button [disabled]="page() === totalPages()" (click)="goPage(page() + 1)"
+              class="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">›</button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+</div>
+
+<!-- ══ Modal Confirmation ════════════════════════════════ -->
+@if (showConfirm()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">Confirmation</h3>
+          <p class="text-sm text-gray-500 mt-0.5">{{ confirmMsg() }}</p>
+        </div>
+      </div>
+      <div class="flex gap-3 justify-end">
+        <button (click)="annulerConfirm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Annuler</button>
+        <button (click)="validerConfirm()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors">Supprimer</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ══ Modal Détail ════════════════════════════════════════════════ -->
+@if (showDetail()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+       (click)="fermerDetail()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-200"
+         (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="px-6 py-5 border-b border-gray-200 flex items-start justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-11 h-11 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+            <svg class="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8zm0 0l2-2h3a1 1 0 001-1V8a1 1 0 00-.293-.707l-2-2A1 1 0 0016 5h-3"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-900">
+              {{ vehiculeDetail()!.marque }} {{ vehiculeDetail()!.modele }}
+            </h3>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-sm text-gray-500 font-mono">{{ vehiculeDetail()!.immatriculation }}</span>
+              <span class="text-gray-300">·</span>
+              <span class="text-sm text-gray-500">{{ vehiculeDetail()!.numeroInterne }}</span>
+              <span class="text-gray-300">·</span>
+              <span class="text-xs text-gray-500">{{ typeLabel(vehiculeDetail()!.typeVehicule) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border"
+            [ngClass]="statutClass(vehiculeDetail()!.statut)">
+            {{ statutLabel(vehiculeDetail()!.statut) }}
+          </span>
+          <button (click)="fermerDetail()"
+            class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Métriques -->
+      <div class="grid grid-cols-3 divide-x divide-gray-200 border-b border-gray-200 bg-gray-50">
+        <div class="px-6 py-4 text-center">
+          <p class="text-xs text-gray-500 mb-1">Kilométrage</p>
+          <p class="text-lg font-bold text-gray-900">{{ vehiculeDetail()!.kilometrage | number }}</p>
+          <p class="text-xs text-gray-400">km</p>
+        </div>
+        <div class="px-6 py-4 text-center">
+          <p class="text-xs text-gray-500 mb-1">Heures moteur</p>
+          <p class="text-lg font-bold text-gray-900">{{ vehiculeDetail()!.heuresMoteur | number }}</p>
+          <p class="text-xs text-gray-400">heures</p>
+        </div>
+        <div class="px-6 py-4 text-center">
+          <p class="text-xs text-gray-500 mb-1">Année</p>
+          <p class="text-lg font-bold text-gray-900">{{ vehiculeDetail()!.annee ?? '—' }}</p>
+          <p class="text-xs text-gray-400">mise en service</p>
+        </div>
+      </div>
+
+      <!-- Corps -->
+      <div class="overflow-y-auto" style="max-height: 55vh;">
+
+        <!-- Identification -->
+        <div class="px-6 py-4 border-b border-gray-100">
+          <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Identification</h4>
+          <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3">
+            <div>
+              <dt class="text-xs text-gray-400">N° Interne</dt>
+              <dd class="text-sm font-semibold text-gray-800 font-mono mt-0.5">{{ vehiculeDetail()!.numeroInterne }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-gray-400">Immatriculation</dt>
+              <dd class="text-sm font-semibold text-gray-800 mt-0.5">{{ vehiculeDetail()!.immatriculation }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-gray-400">Type</dt>
+              <dd class="text-sm font-semibold text-gray-800 mt-0.5">{{ typeLabel(vehiculeDetail()!.typeVehicule) }}</dd>
+            </div>
+            @if (vehiculeDetail()!.numeroSerie) {
+              <div class="col-span-2">
+                <dt class="text-xs text-gray-400">N° de série</dt>
+                <dd class="text-sm font-mono text-gray-700 mt-0.5">{{ vehiculeDetail()!.numeroSerie }}</dd>
+              </div>
+            }
+          </dl>
+        </div>
+
+        <!-- Caractéristiques -->
+        @if (vehiculeDetail()!.couleur || vehiculeDetail()!.carburant || vehiculeDetail()!.dateAcquisition) {
+          <div class="px-6 py-4 border-b border-gray-100">
+            <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Caractéristiques</h4>
+            <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3">
+              @if (vehiculeDetail()!.couleur) {
+                <div>
+                  <dt class="text-xs text-gray-400">Couleur</dt>
+                  <dd class="text-sm font-semibold text-gray-800 mt-0.5">{{ vehiculeDetail()!.couleur }}</dd>
+                </div>
+              }
+              @if (vehiculeDetail()!.carburant) {
+                <div>
+                  <dt class="text-xs text-gray-400">Carburant</dt>
+                  <dd class="text-sm font-semibold text-gray-800 mt-0.5">{{ vehiculeDetail()!.carburant }}</dd>
+                </div>
+              }
+              @if (vehiculeDetail()!.dateAcquisition) {
+                <div>
+                  <dt class="text-xs text-gray-400">Date d'acquisition</dt>
+                  <dd class="text-sm font-semibold text-gray-800 mt-0.5">{{ vehiculeDetail()!.dateAcquisition | date:'dd/MM/yyyy' }}</dd>
+                </div>
+              }
+            </dl>
+          </div>
+        }
+
+        <!-- Affectation -->
+        @if (vehiculeDetail()!.entite || vehiculeDetail()!.departement || vehiculeDetail()!.siteGeographique) {
+          <div class="px-6 py-4 border-b border-gray-100">
+            <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Affectation</h4>
+            <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3">
+              @if (vehiculeDetail()!.entite) {
+                <div>
+                  <dt class="text-xs text-gray-400">Entité</dt>
+                  <dd class="text-sm font-semibold text-gray-800 mt-0.5">{{ vehiculeDetail()!.entite }}</dd>
+                </div>
+              }
+              @if (vehiculeDetail()!.departement) {
+                <div>
+                  <dt class="text-xs text-gray-400">Département</dt>
+                  <dd class="text-sm font-semibold text-gray-800 mt-0.5">{{ vehiculeDetail()!.departement }}</dd>
+                </div>
+              }
+              @if (vehiculeDetail()!.siteGeographique) {
+                <div>
+                  <dt class="text-xs text-gray-400">Site géographique</dt>
+                  <dd class="text-sm font-semibold text-gray-800 mt-0.5">{{ vehiculeDetail()!.siteGeographique }}</dd>
+                </div>
+              }
+            </dl>
+          </div>
+        }
+
+        <!-- Notes -->
+        @if (vehiculeDetail()!.notes) {
+          <div class="px-6 py-4">
+            <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Notes</h4>
+            <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{ vehiculeDetail()!.notes }}</p>
+          </div>
+        }
+
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50">
+        <button (click)="fermerDetail()"
+          class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-white transition-colors">
+          Fermer
+        </button>
+        <button (click)="ouvrirEdit(vehiculeDetail()!); fermerDetail()"
+          class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+          </svg>
+          Modifier
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ══ Modal Édition ════════════════════════════════════════════════ -->
+@if (showEdit()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+       (click)="fermerEdit()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl flex flex-col" style="max-height: 90vh;" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+        <div>
+          <h3 class="text-base font-bold text-gray-900">Modifier le véhicule</h3>
+          <p class="text-xs text-gray-400 mt-0.5">{{ vehiculeAEditer()!.immatriculation }} — {{ vehiculeAEditer()!.marque }} {{ vehiculeAEditer()!.modele }}</p>
+        </div>
+        <button (click)="fermerEdit()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <form [formGroup]="editForm" (ngSubmit)="sauvegarderEdit()" class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+
+        <!-- Identification -->
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Identification</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">N° Interne <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="numeroInterne" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Immatriculation <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="immatriculation" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Marque <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="marque" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Modèle <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="modele" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">N° de série</label>
+            <input type="text" formControlName="numeroSerie" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Type <span class="text-red-500">*</span></label>
+            <select formControlName="typeVehicule" class="form-select w-full rounded-lg border-gray-200 text-sm">
+              @for (t of types; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Caractéristiques -->
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-1">Caractéristiques</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Année</label>
+            <input type="number" formControlName="annee" min="1990" max="2030" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Couleur</label>
+            <input type="text" formControlName="couleur" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Carburant</label>
+            <select formControlName="carburant" class="form-select w-full rounded-lg border-gray-200 text-sm">
+              <option value="">—</option>
+              @for (c of carburants; track c.value) {
+                <option [value]="c.value">{{ c.label }}</option>
+              }
+            </select>
+          </div>
+          @if (!estEnginHeureEdit()) {
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Kilométrage</label>
+              <input type="number" formControlName="kilometrage" min="0" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+            </div>
+          }
+          @if (estEnginHeureEdit()) {
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Heures moteur</label>
+              <input type="number" formControlName="heuresMoteur" min="0" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+            </div>
+          }
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Date d'acquisition</label>
+            <input type="date" formControlName="dateAcquisition" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+          </div>
+        </div>
+
+        <!-- Affectation -->
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-1">Affectation</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Entité (ville)</label>
+            <input formControlName="entite" type="text" list="entites-edit" placeholder="Ex : Ouagadougou"
+              class="form-input w-full rounded-lg border-gray-200 text-sm" />
+            <datalist id="entites-edit">
+              @for (e of entites(); track e) { <option [value]="e"></option> }
+            </datalist>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Département</label>
+            <input type="text" formControlName="departement" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Site géographique</label>
+            <input type="text" formControlName="siteGeographique" class="form-input w-full rounded-lg border-gray-200 text-sm"/>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Statut</label>
+            <select formControlName="statut" class="form-select w-full rounded-lg border-gray-200 text-sm">
+              @for (s of statuts; track s.value) {
+                <option [value]="s.value">{{ s.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+            <textarea formControlName="notes" rows="3" class="form-textarea w-full rounded-lg border-gray-200 text-sm resize-none"></textarea>
+          </div>
+        </div>
+
+        @if (editErreur()) {
+          <p class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ editErreur() }}</p>
+        }
+      </form>
+
+      <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 shrink-0 bg-gray-50 rounded-b-2xl">
+        <button type="button" (click)="fermerEdit()" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-white">Annuler</button>
+        <button type="button" (click)="sauvegarderEdit()" [disabled]="editLoading()"
+          class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 disabled:opacity-60">
+          @if (editLoading()) { <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> }
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ========================== MODAL WIZARD ========================== -->
+@if (showModal()) {
+  <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style="max-height: 90vh;">
+
+      <!-- Header -->
+      <div class="px-6 pt-6 pb-4 border-b border-gray-100">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-900">Nouveau véhicule</h2>
+          <button (click)="fermerModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Steps indicator -->
+        <div class="flex items-center gap-0">
+          @for (e of etapes; track e.num) {
+            <div class="flex items-center" [class.flex-1]="e.num < nbEtapes">
+              <!-- Cercle -->
+              <div class="flex items-center gap-2 shrink-0">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                  [ngClass]="etape() > e.num
+                    ? 'bg-primary-600 text-white'
+                    : etape() === e.num
+                      ? 'bg-primary-600 text-white ring-4 ring-primary-100'
+                      : 'bg-gray-100 text-gray-400'">
+                  @if (etape() > e.num) {
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  } @else {
+                    {{ e.num }}
+                  }
+                </div>
+                <span class="text-xs font-medium hidden sm:block"
+                  [ngClass]="etape() >= e.num ? 'text-gray-800' : 'text-gray-400'">{{ e.titre }}</span>
+              </div>
+              <!-- Ligne de progression -->
+              @if (e.num < nbEtapes) {
+                <div class="flex-1 h-0.5 mx-3"
+                  [ngClass]="etape() > e.num ? 'bg-primary-600' : 'bg-gray-200'"></div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Contenu des étapes -->
+      <form [formGroup]="form" (ngSubmit)="soumettre()" class="flex-1 overflow-y-auto px-6 py-5">
+
+        <!-- ÉTAPE 1 : Identification -->
+        @if (etape() === 1) {
+          <div class="space-y-4">
+            <p class="text-xs text-gray-400">Les champs marqués <span class="text-red-500">*</span> sont obligatoires</p>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">N° Interne <span class="text-red-500">*</span></label>
+                <input type="text" formControlName="numeroInterne" placeholder="VH-001"
+                  class="form-input w-full rounded-lg border-gray-200 text-sm"
+                  [class.border-red-400]="touched('numeroInterne')" />
+                @if (touched('numeroInterne')) {
+                  <p class="text-xs text-red-500 mt-0.5">Obligatoire</p>
+                }
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Immatriculation <span class="text-red-500">*</span></label>
+                <input type="text" formControlName="immatriculation" placeholder="11 A 0001 BF"
+                  class="form-input w-full rounded-lg border-gray-200 text-sm"
+                  [class.border-red-400]="touched('immatriculation')" />
+                @if (touched('immatriculation')) {
+                  <p class="text-xs text-red-500 mt-0.5">Obligatoire</p>
+                }
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Marque <span class="text-red-500">*</span></label>
+                <input type="text" formControlName="marque" placeholder="Toyota"
+                  class="form-input w-full rounded-lg border-gray-200 text-sm"
+                  [class.border-red-400]="touched('marque')" />
+                @if (touched('marque')) {
+                  <p class="text-xs text-red-500 mt-0.5">Obligatoire</p>
+                }
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Modèle <span class="text-red-500">*</span></label>
+                <input type="text" formControlName="modele" placeholder="Land Cruiser"
+                  class="form-input w-full rounded-lg border-gray-200 text-sm"
+                  [class.border-red-400]="touched('modele')" />
+                @if (touched('modele')) {
+                  <p class="text-xs text-red-500 mt-0.5">Obligatoire</p>
+                }
+              </div>
+              <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Type de véhicule <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-2 gap-2">
+                  @for (t of types; track t.value) {
+                    <button type="button" (click)="form.get('typeVehicule')!.setValue(t.value)"
+                      class="px-3 py-2.5 rounded-lg border text-sm font-medium text-left transition-colors"
+                      [ngClass]="form.get('typeVehicule')!.value === t.value
+                        ? 'border-primary-500 bg-primary-50 text-primary-700'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'">
+                      {{ t.label }}
+                    </button>
+                  }
+                </div>
+                @if (touched('typeVehicule')) {
+                  <p class="text-xs text-red-500 mt-1">Sélectionnez un type</p>
+                }
+              </div>
+              <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">N° de série</label>
+                <input type="text" formControlName="numeroSerie"
+                  class="form-input w-full rounded-lg border-gray-200 text-sm" />
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ÉTAPE 2 : Caractéristiques -->
+        @if (etape() === 2) {
+          <div class="space-y-4">
+            <p class="text-xs text-gray-400">Tous les champs sont optionnels</p>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Année</label>
+                <input type="number" formControlName="annee" placeholder="2024" min="1990" max="2030"
+                  class="form-input w-full rounded-lg border-gray-200 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Couleur</label>
+                <input type="text" formControlName="couleur" placeholder="Blanc"
+                  class="form-input w-full rounded-lg border-gray-200 text-sm" />
+              </div>
+              <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Carburant</label>
+                <div class="flex flex-wrap gap-2">
+                  @for (c of carburants; track c.value) {
+                    <button type="button" (click)="form.get('carburant')!.setValue(c.value)"
+                      class="px-3 py-1.5 rounded-full border text-xs font-medium transition-colors"
+                      [ngClass]="form.get('carburant')!.value === c.value
+                        ? 'border-primary-500 bg-primary-50 text-primary-700'
+                        : 'border-gray-200 text-gray-500 hover:border-gray-300'">
+                      {{ c.label }}
+                    </button>
+                  }
+                </div>
+              </div>
+              @if (!estEnginHeure()) {
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Kilométrage initial</label>
+                  <input type="number" formControlName="kilometrage" placeholder="0" min="0"
+                    class="form-input w-full rounded-lg border-gray-200 text-sm" />
+                </div>
+              }
+              @if (estEnginHeure()) {
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Heures moteur initiales</label>
+                  <input type="number" formControlName="heuresMoteur" placeholder="0" min="0"
+                    class="form-input w-full rounded-lg border-gray-200 text-sm" />
+                </div>
+              }
+              <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Date d'acquisition</label>
+                <input type="date" formControlName="dateAcquisition"
+                  class="form-input w-full rounded-lg border-gray-200 text-sm" />
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ÉTAPE 3 : Affectation -->
+        @if (etape() === 3) {
+          <div class="space-y-4">
+            <p class="text-xs text-gray-400">Informations d'affectation et statut initial</p>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Entité (ville)</label>
+                <input formControlName="entite" type="text" list="entites-wizard" placeholder="Ex : Ouagadougou"
+                  class="form-input w-full rounded-xl border-gray-200 text-sm" />
+                <datalist id="entites-wizard">
+                  @for (e of entites(); track e) { <option [value]="e"></option> }
+                </datalist>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Département</label>
+                <input type="text" formControlName="departement" placeholder="Direction, Logistique…"
+                  class="form-input w-full rounded-lg border-gray-200 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Site géographique</label>
+                <input type="text" formControlName="siteGeographique"
+                  class="form-input w-full rounded-lg border-gray-200 text-sm" />
+              </div>
+              <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-2">Statut initial</label>
+                <div class="grid grid-cols-2 gap-2">
+                  @for (s of statuts; track s.value) {
+                    <button type="button" (click)="form.get('statut')!.setValue(s.value)"
+                      class="px-3 py-2 rounded-lg border text-xs font-medium text-left transition-colors"
+                      [ngClass]="form.get('statut')!.value === s.value
+                        ? 'border-primary-500 bg-primary-50 text-primary-700'
+                        : 'border-gray-200 text-gray-500 hover:border-gray-300'">
+                      {{ s.label }}
+                    </button>
+                  }
+                </div>
+              </div>
+              <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+                <textarea formControlName="notes" rows="3" placeholder="Informations complémentaires…"
+                  class="form-textarea w-full rounded-lg border-gray-200 text-sm resize-none"></textarea>
+              </div>
+            </div>
+
+            @if (modalErreur()) {
+              <p class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ modalErreur() }}</p>
+            }
+          </div>
+        }
+
+      </form>
+
+      <!-- Footer navigation -->
+      <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50 rounded-b-2xl">
+        <button type="button" (click)="precedent()" [class.invisible]="etape() === 1"
+          class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-white transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Précédent
+        </button>
+
+        <span class="text-xs text-gray-400">{{ etape() }} / {{ nbEtapes }}</span>
+
+        @if (etape() < nbEtapes) {
+          <button type="button" (click)="suivant()"
+            class="inline-flex items-center gap-1.5 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 transition-colors">
+            Suivant
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        } @else {
+          <button type="button" (click)="soumettre()" [disabled]="modalLoading()"
+            class="inline-flex items-center gap-2 px-5 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 disabled:opacity-60 transition-colors">
+            @if (modalLoading()) {
+              <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            } @else {
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+            }
+            Créer le véhicule
+          </button>
+        }
+      </div>
+
+    </div>
+  </div>
+}

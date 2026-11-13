@@ -1,0 +1,74 @@
+<div class="p-6 max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center gap-3">
+    <a routerLink="/stocks" class="text-gray-400 hover:text-gray-600">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900">Nouvelle pièce</h1>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="soumettre()" class="space-y-5">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Référence <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="reference" placeholder="FLT-HUI-001"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Désignation <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="designation"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Marque</label>
+          <input type="text" formControlName="marque" class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Catégorie</label>
+          <input type="text" formControlName="categorie" placeholder="Filtration, Lubrifiants…"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Qté initiale</label>
+          <input type="number" formControlName="quantiteDisponible" min="0"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Seuil minimum</label>
+          <input type="number" formControlName="quantiteMinimum" min="0"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Unité</label>
+          <input type="text" formControlName="unite" placeholder="unité, litre, bidon…"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Prix unitaire (FCFA)</label>
+          <input type="number" formControlName="prixUnitaire" min="0"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Emplacement</label>
+          <input type="text" formControlName="emplacement" placeholder="Rayon A, Case 3…"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+      </div>
+    </div>
+
+    @if (erreurServeur()) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">{{ erreurServeur() }}</div>
+    }
+
+    <div class="flex items-center justify-end gap-3">
+      <a routerLink="/stocks" class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Annuler</a>
+      <button type="submit" [disabled]="loading()"
+        class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-60">
+        @if (loading()) { <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> }
+        Créer la pièce
+      </button>
+    </div>
+  </form>
+</div>

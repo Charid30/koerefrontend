@@ -1,0 +1,76 @@
+<div class="p-6 max-w-3xl mx-auto space-y-6">
+
+  <div class="flex items-center gap-3">
+    <a routerLink="/ordres-travail" class="text-gray-400 hover:text-gray-600">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900">Nouvel Ordre de Travail</h1>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="soumettre()" class="space-y-5">
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Informations</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Véhicule <span class="text-red-500">*</span></label>
+          <select formControlName="vehiculeId" class="form-select w-full rounded-lg border-gray-200 text-sm">
+            <option value="">Sélectionner...</option>
+            @for (v of vehicules(); track v.id) {
+              <option [value]="v.id">{{ v.marque }} {{ v.modele }} ({{ v.numeroInterne }})</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Type de maintenance <span class="text-red-500">*</span></label>
+          <select formControlName="typeMaintenance" class="form-select w-full rounded-lg border-gray-200 text-sm">
+            <option value="PREVENTIVE">Préventive</option>
+            <option value="CORRECTIVE">Corrective</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Date planifiée</label>
+          <input type="date" formControlName="datePlanifiee"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Prestataire externe</label>
+          <input type="text" formControlName="prestatireExterne" placeholder="Nom du prestataire (optionnel)"
+            class="form-input w-full rounded-lg border-gray-200 text-sm" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Description des travaux</label>
+          <textarea formControlName="description" rows="3"
+            class="form-textarea w-full rounded-lg border-gray-200 text-sm resize-none"
+            placeholder="Décrire les travaux à effectuer…"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    @if (erreurServeur()) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">{{ erreurServeur() }}</div>
+    }
+
+    <div class="flex items-center justify-end gap-3">
+      <a routerLink="/ordres-travail" class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+        Annuler
+      </a>
+      <button type="submit" [disabled]="loading()"
+        class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-60">
+        @if (loading()) {
+          <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        }
+        Créer l'OT
+      </button>
+    </div>
+
+  </form>
+</div>

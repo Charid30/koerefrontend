@@ -11,6 +11,7 @@ import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { OtService } from '../../../core/services/ot.service';
 import { VehiculesService } from '../../../core/services/vehicules.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { OrdreTravail } from '../../../core/models/ot.model';
 import { Vehicule } from '../../../core/models/vehicule.model';
 import { OT_STATUT_LABELS, OT_STATUT_CLASSES, OT_STATUT_POINTS, OT_TRANSITIONS } from '../ot.constants';
@@ -25,6 +26,7 @@ import { OT_STATUT_LABELS, OT_STATUT_CLASSES, OT_STATUT_POINTS, OT_TRANSITIONS }
 export class OtListComponent implements OnInit {
   private svc = inject(OtService);
   private vehiculesSvc = inject(VehiculesService);
+  private toast = inject(ToastService);
   private fb = inject(FormBuilder);
 
   ots = signal<OrdreTravail[]>([]);
@@ -96,7 +98,6 @@ export class OtListComponent implements OnInit {
   showModal = signal(false);
   modalLoading = signal(false);
   erreurModal = signal('');
-  etape = signal(1);
   vehicules = signal<Vehicule[]>([]);
 
   // Modal détail
@@ -278,25 +279,59 @@ export class OtListComponent implements OnInit {
     );
   }
 
-  // ── Wizard création ──────────────────────────────────────────────
+  // ── Création d'un OT ─────────────────────────────────────────────
+  readonly rechercheVehicule = signal('');
+  readonly vehiculeChoisiId = signal<number | null>(null);
+
+  readonly vehiculesFiltres = computed(() => {
+    const q = this.rechercheVehicule().toLowerCase().trim();
+    if (!q) return this.vehicules();
+    return this.vehicules().filter((v) =>
+      `${v.marque} ${v.modele} ${v.numeroInterne} ${v.immatriculation}`.toLowerCase().includes(q),
+    );
+  });
+
+  readonly vehiculeChoisi = computed(
+    () => this.vehicules().find((v) => v.id === this.vehiculeChoisiId()) ?? null,
+  );
+
+  /** Raccourcis de date de planification */
+  readonly datesRapides = [
+    { libelle: 'Aujourd’hui', jours: 0 },
+    { libelle: 'Demain', jours: 1 },
+    { libelle: 'Dans une semaine', jours: 7 },
+  ];
+
   ouvrirModal() {
-    this.form.reset({ typeMaintenance: 'CORRECTIVE' });
+    this.form.reset({
+      vehiculeId: '',
+      typeMaintenance: 'CORRECTIVE',
+      datePlanifiee: '',
+      prestatireExterne: '',
+      description: '',
+    });
+    this.rechercheVehicule.set('');
+    this.vehiculeChoisiId.set(null);
     this.erreurModal.set('');
-    this.etape.set(1);
     this.showModal.set(true);
   }
   fermerModal() {
     this.showModal.set(false);
   }
 
-  suivant() {
-    const ctrl = this.form.get('vehiculeId');
-    ctrl?.markAsTouched();
-    if (ctrl?.invalid) return;
-    this.etape.set(2);
+  choisirVehicule(id: number) {
+    this.vehiculeChoisiId.set(id);
+    this.form.get('vehiculeId')!.setValue(String(id));
   }
-  precedent() {
-    this.etape.set(1);
+
+  dateDans(jours: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + jours);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  choisirDate(jours: number) {
+    this.form.get('datePlanifiee')!.setValue(this.dateDans(jours));
   }
 
   soumettre() {
@@ -313,18 +348,42 @@ export class OtListComponent implements OnInit {
         vehiculeId: Number(val.vehiculeId),
         datePlanifiee: val.datePlanifiee || undefined,
         prestatireExterne: val.prestatireExterne || undefined,
+        description: val.description || undefined,
       })
       .subscribe({
         next: () => {
           this.fermerModal();
           this.charger();
           this.modalLoading.set(false);
+          this.toast.success('Ordre de travail créé');
         },
         error: (err) => {
-          this.erreurModal.set(err?.error?.message ?? 'Erreur');
+          this.erreurModal.set(err?.error?.message ?? 'La création a échoué. Réessayez.');
           this.modalLoading.set(false);
         },
       });
+  }
+
+  statutVehiculeLabel(s: string): string {
+    const m: Record<string, string> = {
+      DISPONIBLE: 'Disponible',
+      EN_CIRCULATION: 'En circulation',
+      EN_MAINTENANCE: 'En maintenance',
+      EN_ATTENTE_REPARATION_EXTERNE: 'Réparation ext.',
+      EN_ATTENTE_PIECES: 'Attente pièces',
+      IMMOBILISE: 'Immobilisé',
+      ACCIDENTE: 'Accidenté',
+      HORS_SERVICE: 'Hors service',
+    };
+    return m[s] ?? s;
+  }
+
+  statutVehiculeClass(s: string): string {
+    if (s === 'DISPONIBLE') return 'bg-green-50 text-green-700 ring-green-600/20';
+    if (s === 'EN_CIRCULATION') return 'bg-blue-50 text-blue-700 ring-blue-600/20';
+    if (['IMMOBILISE', 'ACCIDENTE'].includes(s)) return 'bg-red-50 text-red-700 ring-red-600/20';
+    if (s === 'HORS_SERVICE') return 'bg-gray-100 text-gray-600 ring-gray-500/20';
+    return 'bg-amber-50 text-amber-800 ring-amber-600/25';
   }
 
   setType(t: string) {

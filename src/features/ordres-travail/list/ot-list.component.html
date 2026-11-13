@@ -547,293 +547,146 @@
     </div>
   }
 
-  <!-- ══ Wizard OT ════════════════════════════════════════ -->
+  <!-- ══ Création d'un OT ══════════════════════════════════ -->
   @if (showModal()) {
-    <div
-      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs sm:p-4"
-      (click)="fermerModal()"
-    >
-      <div
-        class="bg-white w-full sm:rounded-2xl sm:shadow-2xl sm:max-w-lg flex flex-col max-h-screen sm:max-h-[90vh]"
-        (click)="$event.stopPropagation()"
-      >
-        <!-- Header -->
-        <div class="px-6 pt-5 pb-4 border-b border-gray-100">
-          <div class="flex items-center justify-between mb-5">
-            <div>
-              <h2 class="text-lg font-bold text-gray-900">Nouvel Ordre de Travail</h2>
-              <p class="text-xs text-gray-400 mt-0.5">
-                {{ etape() }}/2 — {{ etape() === 1 ? 'Véhicule & Type' : 'Planification' }}
-              </p>
-            </div>
-            <button
-              (click)="fermerModal()"
-              class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-            >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+    <div class="fixed inset-0 z-50 flex items-end justify-center bg-gray-950/50 backdrop-blur-xs sm:items-center sm:p-4"
+      (click)="fermerModal()" (keydown.escape)="fermerModal()">
+      <div class="flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-2xl sm:max-w-xl sm:rounded-2xl"
+        role="dialog" aria-modal="true" aria-labelledby="titre-nouvel-ot" (click)="$event.stopPropagation()">
+
+        <!-- En-tête -->
+        <div class="flex items-start justify-between gap-4 px-6 pt-5 pb-4">
+          <div>
+            <h2 id="titre-nouvel-ot" class="text-lg font-semibold text-gray-900">Nouvel ordre de travail</h2>
+            <p class="mt-0.5 text-sm text-gray-500">Planifiez une intervention sur un véhicule du parc.</p>
           </div>
-          <div class="flex items-center">
-            @for (
-              s of [
-                { n: 1, t: 'Véhicule' },
-                { n: 2, t: 'Planification' },
-              ];
-              track s.n
-            ) {
-              <div class="flex items-center" [class.flex-1]="s.n < 2">
-                <div class="flex items-center gap-2 shrink-0">
-                  <div
-                    class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
-                    [ngClass]="
-                      etape() > s.n
-                        ? 'bg-primary-600 text-white'
-                        : etape() === s.n
-                          ? 'bg-primary-600 text-white ring-4 ring-primary-100'
-                          : 'bg-gray-100 text-gray-400'
-                    "
-                  >
-                    @if (etape() > s.n) {
-                      <svg
-                        class="w-3.5 h-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2.5"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    } @else {
-                      {{ s.n }}
-                    }
-                  </div>
-                  <span
-                    class="text-xs font-medium hidden sm:block"
-                    [ngClass]="etape() >= s.n ? 'text-gray-800' : 'text-gray-400'"
-                    >{{ s.t }}</span
-                  >
-                </div>
-                @if (s.n < 2) {
-                  <div
-                    class="flex-1 h-0.5 mx-3"
-                    [ngClass]="etape() > s.n ? 'bg-primary-600' : 'bg-gray-200'"
-                  ></div>
-                }
-              </div>
-            }
-          </div>
+          <button type="button" (click)="fermerModal()" aria-label="Fermer" class="btn-icone -mr-2 -mt-1">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
 
-        <!-- Contenu -->
-        <form
-          [formGroup]="form"
-          (ngSubmit)="soumettre()"
-          class="flex-1 overflow-y-auto px-6 py-5 space-y-4"
-        >
-          <!-- ÉTAPE 1 : Véhicule & Type -->
-          @if (etape() === 1) {
-            <div class="space-y-4">
-              <div>
-                <label
-                  class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
-                  >Véhicule <span class="text-red-500">*</span></label
-                >
-                <select
-                  formControlName="vehiculeId"
-                  class="w-full border rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                  [ngClass]="
-                    form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched
-                      ? 'border-red-300'
-                      : 'border-gray-200'
-                  "
-                >
-                  <option value="">— Sélectionner un véhicule —</option>
-                  @for (v of vehicules(); track v.id) {
-                    <option [value]="v.id">
-                      {{ v.marque }} {{ v.modele }} · {{ v.numeroInterne }}
-                    </option>
-                  }
-                </select>
-                @if (form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched) {
-                  <p class="text-xs text-red-500 mt-1">Sélectionnez un véhicule</p>
+        <form [formGroup]="form" (ngSubmit)="soumettre()" class="flex-1 space-y-6 overflow-y-auto border-t border-gray-100 px-6 py-5">
+
+          <!-- Véhicule -->
+          <fieldset>
+            <legend class="text-sm font-medium text-gray-900">Véhicule concerné</legend>
+            @if (vehicules().length === 0) {
+              <div class="mt-2 rounded-xl border border-dashed border-gray-300 px-4 py-6 text-center">
+                <p class="text-sm font-medium text-gray-900">Aucun véhicule dans le parc</p>
+                <p class="mt-0.5 text-sm text-gray-500">Ajoutez d’abord un véhicule pour pouvoir lui créer un ordre de travail.</p>
+                <a routerLink="/vehicules" (click)="fermerModal()" class="btn-secondaire mt-3">Aller aux véhicules</a>
+              </div>
+            } @else if (vehiculeChoisi(); as v) {
+              <!-- Véhicule sélectionné -->
+              <div class="mt-2 flex items-center gap-3 rounded-xl bg-primary-50/60 p-3 ring-1 ring-inset ring-primary-200">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-primary-600 ring-1 ring-inset ring-primary-200" aria-hidden="true">
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zm0 0l2-2 2-5H13v7z"/></svg>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="truncate font-medium text-gray-900">{{ v.marque }} {{ v.modele }}</p>
+                  <p class="truncate text-xs text-gray-500"><span class="font-mono">{{ v.numeroInterne }}</span> · {{ v.immatriculation }}</p>
+                </div>
+                <button type="button" (click)="vehiculeChoisiId.set(null); form.get('vehiculeId')!.setValue('')" class="text-sm font-medium text-primary-600 hover:text-primary-800">Changer</button>
+              </div>
+            } @else {
+              <div class="relative mt-2">
+                <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+                <input type="search" [value]="rechercheVehicule()" (input)="rechercheVehicule.set($any($event.target).value)"
+                  placeholder="Rechercher par marque, immatriculation, n° interne…" aria-label="Rechercher un véhicule" class="champ pl-9" />
+              </div>
+              <ul class="mt-2 max-h-52 divide-y divide-gray-100 overflow-y-auto rounded-xl ring-1 ring-inset ring-gray-200" role="listbox" aria-label="Véhicules">
+                @for (v of vehiculesFiltres(); track v.id) {
+                  <li>
+                    <button type="button" role="option" [attr.aria-selected]="false" (click)="choisirVehicule(v.id)"
+                      class="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none">
+                      <span class="min-w-0 flex-1">
+                        <span class="block truncate text-sm font-medium text-gray-900">{{ v.marque }} {{ v.modele }}</span>
+                        <span class="block truncate text-xs text-gray-500"><span class="font-mono">{{ v.numeroInterne }}</span> · {{ v.immatriculation }}</span>
+                      </span>
+                      <span class="badge shrink-0" [ngClass]="statutVehiculeClass(v.statut)">{{ statutVehiculeLabel(v.statut) }}</span>
+                    </button>
+                  </li>
+                } @empty {
+                  <li class="px-3 py-6 text-center text-sm text-gray-500">Aucun véhicule ne correspond.</li>
+                }
+              </ul>
+              @if (form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched) {
+                <p class="mt-1.5 text-xs text-red-600">Choisissez le véhicule concerné.</p>
+              }
+            }
+          </fieldset>
+
+          <!-- Type -->
+          <fieldset>
+            <legend class="text-sm font-medium text-gray-900">Type d’intervention</legend>
+            <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup">
+              @for (t of [
+                { v: 'CORRECTIVE', titre: 'Corrective', aide: 'Réparer une panne ou une anomalie constatée',
+                  icone: 'M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085' },
+                { v: 'PREVENTIVE', titre: 'Préventive', aide: 'Entretien planifié : vidange, révision, contrôle',
+                  icone: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }
+              ]; track t.v) {
+                <button type="button" role="radio" [attr.aria-checked]="form.get('typeMaintenance')!.value === t.v" (click)="setType(t.v)"
+                  class="flex items-start gap-3 rounded-xl p-3 text-left ring-1 ring-inset transition"
+                  [ngClass]="form.get('typeMaintenance')!.value === t.v ? 'bg-primary-50/60 ring-2 ring-primary-500' : 'ring-gray-200 hover:bg-gray-50'">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                    [ngClass]="t.v === 'PREVENTIVE' ? 'bg-primary-100 text-primary-700' : 'bg-orange-100 text-orange-700'" aria-hidden="true">
+                    <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" [attr.d]="t.icone" /></svg>
+                  </span>
+                  <span>
+                    <span class="block text-sm font-medium text-gray-900">{{ t.titre }}</span>
+                    <span class="block text-xs text-gray-500">{{ t.aide }}</span>
+                  </span>
+                </button>
+              }
+            </div>
+          </fieldset>
+
+          <!-- Planification -->
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="ot-date" class="text-sm font-medium text-gray-900">Date prévue <span class="font-normal text-gray-400">(facultatif)</span></label>
+              <input id="ot-date" type="date" formControlName="datePlanifiee" class="champ mt-2" />
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                @for (d of datesRapides; track d.jours) {
+                  <button type="button" (click)="choisirDate(d.jours)" class="puce"
+                    [class.puce-active]="form.get('datePlanifiee')!.value === dateDans(d.jours)">{{ d.libelle }}</button>
                 }
               </div>
-
-              <div>
-                <label
-                  class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
-                  >Type de maintenance</label
-                >
-                <div class="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    (click)="setType('CORRECTIVE')"
-                    class="flex flex-col items-center gap-2 px-4 py-4 rounded-xl border text-sm font-medium transition-all"
-                    [ngClass]="
-                      form.get('typeMaintenance')!.value === 'CORRECTIVE'
-                        ? 'border-orange-500 bg-orange-50 text-orange-700 ring-2 ring-orange-200'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'
-                    "
-                  >
-                    <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-                      />
-                    </svg>
-                    Corrective
-                  </button>
-                  <button
-                    type="button"
-                    (click)="setType('PREVENTIVE')"
-                    class="flex flex-col items-center gap-2 px-4 py-4 rounded-xl border text-sm font-medium transition-all"
-                    [ngClass]="
-                      form.get('typeMaintenance')!.value === 'PREVENTIVE'
-                        ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'
-                    "
-                  >
-                    <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                    Préventive
-                  </button>
-                </div>
-              </div>
             </div>
+            <div>
+              <label for="ot-prestataire" class="text-sm font-medium text-gray-900">Prestataire externe <span class="font-normal text-gray-400">(facultatif)</span></label>
+              <input id="ot-prestataire" type="text" formControlName="prestatireExterne" placeholder="Garage ou atelier extérieur" class="champ mt-2" />
+              <p class="mt-1.5 text-xs text-gray-500">Laissez vide si l’intervention est faite en interne.</p>
+            </div>
+          </div>
+
+          <div>
+            <label for="ot-description" class="text-sm font-medium text-gray-900">Travaux à effectuer <span class="font-normal text-gray-400">(facultatif)</span></label>
+            <textarea id="ot-description" formControlName="description" rows="3"
+              placeholder="Ex. : remplacer les plaquettes avant, contrôler le niveau de liquide de frein…" class="champ mt-2 resize-none"></textarea>
+          </div>
+
+          @if (erreurModal()) {
+            <div class="rounded-xl bg-red-50 p-3 text-sm text-red-700 ring-1 ring-inset ring-red-600/20" role="alert">{{ erreurModal() }}</div>
           }
 
-          <!-- ÉTAPE 2 : Planification -->
-          @if (etape() === 2) {
-            <div class="space-y-4">
-              <div>
-                <label
-                  class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
-                  >Date planifiée</label
-                >
-                <input
-                  type="date"
-                  formControlName="datePlanifiee"
-                  class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                />
-              </div>
-              <div>
-                <label
-                  class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
-                  >Prestataire externe</label
-                >
-                <input
-                  type="text"
-                  formControlName="prestatireExterne"
-                  placeholder="Nom du garage ou prestataire"
-                  class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                />
-              </div>
-              <div>
-                <label
-                  class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
-                  >Description / Observations</label
-                >
-                <textarea
-                  formControlName="description"
-                  rows="4"
-                  placeholder="Travaux à effectuer, pièces nécessaires..."
-                  class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
-                ></textarea>
-              </div>
-              @if (erreurModal()) {
-                <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                  {{ erreurModal() }}
-                </div>
-              }
-            </div>
-          }
+          <!-- Envoi par la touche Entrée -->
+          <button type="submit" class="hidden" aria-hidden="true" tabindex="-1"></button>
         </form>
 
-        <!-- Footer -->
-        <div
-          class="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex items-center justify-between"
-        >
-          @if (etape() === 1) {
-            <button
-              type="button"
-              (click)="fermerModal()"
-              class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors"
-            >
-              Annuler
-            </button>
-            <button
-              type="button"
-              (click)="suivant()"
-              class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-colors"
-            >
-              Suivant
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          } @else {
-            <button
-              type="button"
-              (click)="precedent()"
-              class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors"
-            >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Précédent
-            </button>
-            <button
-              type="button"
-              (click)="soumettre()"
-              [disabled]="modalLoading()"
-              class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 disabled:opacity-50 transition-colors"
-            >
+        <!-- Pied -->
+        <div class="flex items-center justify-between gap-3 rounded-b-2xl border-t border-gray-100 bg-gray-50/70 px-6 py-4">
+          <p class="hidden text-xs text-gray-500 sm:block">L’OT sera créé « en attente de validation ».</p>
+          <div class="flex flex-1 justify-end gap-2 sm:flex-none">
+            <button type="button" (click)="fermerModal()" class="btn-secondaire">Annuler</button>
+            <button type="button" (click)="soumettre()" [disabled]="modalLoading() || vehicules().length === 0" class="btn-primaire">
               @if (modalLoading()) {
-                <span
-                  class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
-                ></span>
-              } @else {
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
+                <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true"></span>
               }
-              Créer l'OT
+              Créer l’ordre de travail
             </button>
-          }
+          </div>
         </div>
       </div>
     </div>

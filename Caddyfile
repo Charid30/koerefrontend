@@ -1,0 +1,26 @@
+# SITE_ADDRESS vaut ":80" tant qu'il n'y a pas de domaine (accès par l'IP, en HTTP).
+# Avec un domaine (ex. gmao.exemple.com), Caddy obtient et renouvelle seul le certificat HTTPS.
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	# API et fichiers téléversés : relayés vers le conteneur backend
+	handle /api/* {
+		reverse_proxy api:3000
+	}
+	handle /uploads/* {
+		reverse_proxy api:3000
+	}
+
+	# Application Angular : toute route inconnue renvoie index.html
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}

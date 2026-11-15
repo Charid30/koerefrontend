@@ -169,6 +169,24 @@ html.dark {
   --color-primary-200: color-mix(in oklab, var(--color-primary-500) 32%, transparent);
 }
 
+/* Contrôles natifs (calendrier, listes déroulantes) en version sombre */
+html.dark { color-scheme: dark; }
+html.dark .zone-sombre { color-scheme: light; }
+
+/* Le plugin @tailwindcss/forms impose un fond blanc fixe (#fff) aux champs :
+   on le remplace par la surface sombre. Couche « base » : les classes
+   .champ et les utilitaires bg-* gardent la priorité. */
+@layer base {
+  html.dark :where(input:not([type='file'], [type='range'], [type='color']), select, textarea) {
+    background-color: var(--color-white);
+    border-color: var(--color-gray-300);
+    color: var(--color-gray-900);
+  }
+  html.dark :where(input, textarea)::placeholder { color: var(--color-gray-400); }
+  html.dark :where(input, select, textarea):disabled { background-color: var(--color-gray-100); color: var(--color-gray-500); }
+  html.dark select option { background-color: #17121f; color: #f2f0f6; }
+}
+
 /* Zones toujours sombres (menu, panneau de connexion) : couleurs d'origine */
 html.dark .zone-sombre {
   --color-white: #fff;
@@ -179,6 +197,17 @@ html.dark .zone-sombre {
 
 @layer utilities {
   html.dark body { background-color: var(--color-gray-50); color: var(--color-gray-800); }
+
+  /* Classes du plugin forms (.form-input…) : elles aussi imposent #fff */
+  html.dark :is(.form-input, .form-select, .form-textarea, .form-multiselect) {
+    background-color: var(--color-white);
+    color: var(--color-gray-900);
+  }
+  html.dark :is(.form-input, .form-select, .form-textarea, .form-multiselect):disabled {
+    background-color: var(--color-gray-100);
+    color: var(--color-gray-500);
+  }
+  html.dark :is(.form-input, .form-textarea)::placeholder { color: var(--color-gray-400); }
 
   /* Le texte blanc reste blanc (boutons, pastilles pleines, photos) */
   html.dark .text-white, html.dark .hover\:text-white:hover, html.dark .group:hover .group-hover\:text-white { color: #fff; }

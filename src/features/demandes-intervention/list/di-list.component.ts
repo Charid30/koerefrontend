@@ -13,6 +13,9 @@ import { VehiculesService } from '../../../core/services/vehicules.service';
 import { DemandeIntervention } from '../../../core/models/ot.model';
 import { Vehicule } from '../../../core/models/vehicule.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { UploadService, urlFichier, verifierFichier, TYPES_IMAGES } from '../../../core/services/upload.service';
+import { Action } from '../../../core/auth/permissions';
 
 @Component({
   selector: 'app-di-list',
@@ -26,6 +29,85 @@ export class DiListComponent implements OnInit {
   private vehiculesSvc = inject(VehiculesService);
   private auth = inject(AuthService);
   private fb = inject(FormBuilder);
+  private upload = inject(UploadService);
+  private toast = inject(ToastService);
+
+  readonly typesImages = TYPES_IMAGES;
+  readonly urlFichier = urlFichier;
+  peut(action: Action) {
+    return this.auth.peut(action);
+  }
+
+  // ── Photos jointes au signalement ───────────────────────────────────────
+  /** Photos choisies dans le formulaire de création, envoyées après l'enregistrement */
+  photosChoisies = signal<{ fichier: File; apercu: string }[]>([]);
+  envoiPhotoDetail = signal(false);
+  apercuPhoto = signal<string | null>(null);
+
+  choisirPhotos(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const fichiers = Array.from(input.files ?? []);
+    input.value = '';
+    const valides: { fichier: File; apercu: string }[] = [];
+    for (const f of fichiers) {
+      const probleme = verifierFichier(f, true);
+      if (probleme) {
+        this.toast.error(`${f.name} : ${probleme}`);
+        continue;
+      }
+      valides.push({ fichier: f, apercu: URL.createObjectURL(f) });
+    }
+    this.photosChoisies.update((l) => [...l, ...valides].slice(0, 6));
+  }
+
+  retirerPhotoChoisie(index: number) {
+    this.photosChoisies.update((l) => {
+      URL.revokeObjectURL(l[index]?.apercu);
+      return l.filter((_, i) => i !== index);
+    });
+  }
+
+  private viderPhotosChoisies() {
+    this.photosChoisies().forEach((p) => URL.revokeObjectURL(p.apercu));
+    this.photosChoisies.set([]);
+  }
+
+  ajouterPhotoDetail(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const fichier = input.files?.[0];
+    input.value = '';
+    const di = this.diDetail();
+    if (!fichier || !di) return;
+    const probleme = verifierFichier(fichier, true);
+    if (probleme) {
+      this.toast.error(probleme);
+      return;
+    }
+    this.envoiPhotoDetail.set(true);
+    this.upload.photoDi(di.id, fichier).subscribe({
+      next: (photo) => {
+        this.envoiPhotoDetail.set(false);
+        this.diDetail.set({ ...di, photos: [...(di.photos ?? []), { ...photo, createdAt: new Date().toISOString() }] });
+        this.toast.success('Photo ajoutée');
+      },
+      error: (err) => {
+        this.envoiPhotoDetail.set(false);
+        this.toast.error(err?.error?.message ?? 'Envoi de la photo impossible.');
+      },
+    });
+  }
+
+  supprimerPhotoDetail(photoId: number) {
+    const di = this.diDetail();
+    if (!di || !confirm('Supprimer cette photo ?')) return;
+    this.upload.supprimerPhotoDi(photoId).subscribe({
+      next: () => {
+        this.diDetail.set({ ...di, photos: (di.photos ?? []).filter((p) => p.id !== photoId) });
+        this.toast.success('Photo supprimée');
+      },
+      error: (err) => this.toast.error(err?.error?.message ?? 'Suppression impossible.'),
+    });
+  }
 
   dis = signal<DemandeIntervention[]>([]);
   total = signal(0);
@@ -59,6 +141,12 @@ export class DiListComponent implements OnInit {
   ouvrirDetail(di: DemandeIntervention) {
     this.diDetail.set(di);
     this.showDetail.set(true);
+    // La liste ne contient pas les photos : on charge la fiche complète
+    this.svc.getOne(di.id).subscribe({
+      next: (complet) => {
+        if (this.diDetail()?.id === di.id) this.diDetail.set(complet);
+      },
+    });
   }
   fermerDetail() {
     this.showDetail.set(false);
@@ -331,6 +419,7 @@ export class DiListComponent implements OnInit {
     this.form.reset({ priorite: 'NORMALE' });
     this.erreurModal.set('');
     this.etape.set(1);
+    this.viderPhotosChoisies();
     this.rechercheVehicule.set('');
     this.vehiculeSelectionne.set(null);
     this.showVehiculeResults.set(false);
@@ -359,9 +448,30 @@ export class DiListComponent implements OnInit {
     this.erreurModal.set('');
     const val = this.form.value as any;
     this.svc.create({ ...val, vehiculeId: Number(val.vehiculeId) }).subscribe({
-      next: () => {
-        this.fermerModal();
-        this.charger();
+      next: (di) => {
+        const photos = this.photosChoisies();
+        if (photos.length === 0) {
+          this.toast.success('Signalement envoyé');
+          this.modalLoading.set(false);
+          this.fermerModal();
+          this.charger();
+          return;
+        }
+        // Le signalement est créé : on joint les photos, sans bloquer si l'une échoue
+        let restantes = photos.length;
+        let echecs = 0;
+        const fin = () => {
+          if (--restantes > 0) return;
+          if (echecs) this.toast.error(`${echecs} photo(s) n'ont pas pu être envoyées.`);
+          else this.toast.success('Signalement envoyé avec ses photos');
+          this.viderPhotosChoisies();
+          this.modalLoading.set(false);
+          this.fermerModal();
+          this.charger();
+        };
+        photos.forEach((p) =>
+          this.upload.photoDi(di.id, p.fichier).subscribe({ next: fin, error: () => { echecs++; fin(); } }),
+        );
       },
       error: (err) => {
         this.erreurModal.set(err?.error?.message ?? 'Erreur');

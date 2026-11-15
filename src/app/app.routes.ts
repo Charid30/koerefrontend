@@ -45,10 +45,10 @@ export const routes: Routes = [
         loadChildren: () => import('../features/demandes-intervention/di.routes').then(m => m.DI_ROUTES),
       },
 
-      // Ordres de Travail — encadrement seulement (pas MECANICIEN, pas CHAUFFEUR)
+      // Ordres de Travail — encadrement, et mécaniciens pour remplir leur compte rendu
       {
         path: 'ordres-travail',
-        canActivate: [roleGuard('ADMIN','RESPONSABLE_PARC','RESPONSABLE_MAINTENANCE')],
+        canActivate: [roleGuard('ADMIN','RESPONSABLE_PARC','RESPONSABLE_MAINTENANCE','MECANICIEN')],
         loadChildren: () => import('../features/ordres-travail/ordres-travail.routes').then(m => m.OT_ROUTES),
       },
 
@@ -85,6 +85,12 @@ export const routes: Routes = [
         path: 'administration',
         canActivate: [roleGuard('ADMIN','DIRECTION','RESPONSABLE_PARC','RESPONSABLE_MAINTENANCE','MECANICIEN')],
         loadChildren: () => import('../features/administration/administration.routes').then(m => m.ADMINISTRATION_ROUTES),
+      },
+
+      // Application mobile — tous les utilisateurs connectés
+      {
+        path: 'application-mobile',
+        loadComponent: () => import('../features/application-mobile/application-mobile.component').then(m => m.ApplicationMobileComponent),
       },
 
       // Profil — tous les utilisateurs connectés

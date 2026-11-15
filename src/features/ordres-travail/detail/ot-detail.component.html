@@ -1,149 +1,378 @@
-<div class="p-6 max-w-5xl mx-auto space-y-6">
+<div class="page max-w-6xl">
 
   @if (loading()) {
-    <div class="flex items-center justify-center py-20">
-      <div class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+    <div class="space-y-4" aria-busy="true">
+      <div class="h-8 w-64 animate-pulse rounded-lg bg-gray-100"></div>
+      <div class="h-24 animate-pulse rounded-2xl bg-gray-100"></div>
+      <div class="grid gap-4 lg:grid-cols-3">
+        <div class="h-64 animate-pulse rounded-2xl bg-gray-100 lg:col-span-2"></div>
+        <div class="h-64 animate-pulse rounded-2xl bg-gray-100"></div>
+      </div>
     </div>
   }
 
-  @if (ot()) {
-    <!-- En-tête -->
-    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <a routerLink="/ordres-travail" class="text-gray-400 hover:text-gray-600">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-          </svg>
+  @if (ot(); as o) {
+    <!-- ── En-tête ─────────────────────────────────────────────────────── -->
+    <header class="page-entete">
+      <div class="min-w-0">
+        <a routerLink="/ordres-travail" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Ordres de travail
         </a>
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900 font-mono">{{ ot()!.numeroOT }}</h1>
-          <p class="text-sm text-gray-500">
-            @if (ot()!.vehicule) { {{ ot()!.vehicule!.marque }} {{ ot()!.vehicule!.modele }} · {{ ot()!.vehicule!.immatriculation }} }
-          </p>
+        <div class="mt-1 flex flex-wrap items-center gap-2">
+          <h1 class="page-titre font-mono">{{ o.numeroOT }}</h1>
+          <span class="badge" [ngClass]="statutClass(o.statut)">
+            <span class="h-1.5 w-1.5 rounded-full" [ngClass]="statutPoint(o.statut)"></span>
+            {{ statutLabel(o.statut) }}
+          </span>
+          <span class="badge" [ngClass]="o.typeMaintenance === 'PREVENTIVE' ? 'bg-primary-50 text-primary-700 ring-primary-600/20' : 'bg-orange-50 text-orange-700 ring-orange-600/20'">
+            {{ o.typeMaintenance === 'PREVENTIVE' ? 'Préventive' : 'Corrective' }}
+          </span>
         </div>
+        @if (o.vehicule) {
+          <p class="page-sous-titre">
+            <a [routerLink]="['/vehicules', o.vehiculeId]" class="font-medium text-gray-700 hover:text-primary-700">{{ o.vehicule.marque }} {{ o.vehicule.modele }}</a>
+            · {{ o.vehicule.immatriculation }} · <span class="font-mono">{{ o.vehicule.numeroInterne }}</span>
+          </p>
+        }
       </div>
-      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold"
-        [ngClass]="statutClass(ot()!.statut)">
-        {{ statutLabel(ot()!.statut) }}
-      </span>
-    </div>
 
-    <!-- Workflow -->
-    @if (transitionsDisponibles().length > 0) {
-      <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5">
-        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Changer le statut</h2>
-        <div class="flex flex-wrap gap-3">
+      @if (transitionsDisponibles().length && peut('ot.statut')) {
+        <div class="flex flex-wrap gap-2">
           @for (t of transitionsDisponibles(); track t) {
-            <button [hidden]="!peut('ot.statut')" (click)="changerStatut(t)"
-              [disabled]="actionLoading()"
-              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50"
-              [ngClass]="transitionClass(t)">
-              {{ statutLabel(t) }} →
+            <button type="button" (click)="demanderStatut(t)" [disabled]="actionLoading()" [ngClass]="transitionClass(t)">
+              {{ t === 'ANNULE' ? 'Annuler l’OT' : statutLabel(t) }}
+              @if (t !== 'ANNULE') {
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+              }
             </button>
           }
         </div>
-        @if (erreurAction()) {
-          <p class="text-sm text-red-600 mt-3">{{ erreurAction() }}</p>
-        }
-      </div>
-    }
+      }
+    </header>
 
-    <!-- Infos -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5">
-        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Détails</h2>
-        <dl class="space-y-3 text-sm">
-          <div class="flex justify-between">
-            <dt class="text-gray-400">Type</dt>
-            <dd class="font-medium">
-              <span class="px-2 py-0.5 rounded-sm text-xs font-medium"
-                [ngClass]="ot()!.typeMaintenance === 'PREVENTIVE' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'">
-                {{ ot()!.typeMaintenance === 'PREVENTIVE' ? 'Préventive' : 'Corrective' }}
+    <!-- ── Suivi des étapes ───────────────────────────────────────────── -->
+    <section class="carte px-4 py-5 sm:px-6" aria-label="Avancement de l’OT">
+      @if (annule()) {
+        <p class="flex items-center gap-2 text-sm font-medium text-red-700">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+          Cet ordre de travail a été annulé.
+        </p>
+      } @else {
+        <ol class="flex items-start">
+          @for (e of etapes; track e.statut; let i = $index; let dernier = $last) {
+            <li class="relative flex flex-1 flex-col items-center text-center" [attr.aria-current]="i === etapeActuelle() ? 'step' : null">
+              @if (!dernier) {
+                <span class="absolute left-1/2 top-3.5 h-0.5 w-full" [ngClass]="i < etapeActuelle() ? 'bg-primary-500' : 'bg-gray-200'" aria-hidden="true"></span>
+              }
+              <span class="relative z-10 flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold"
+                [ngClass]="i < etapeActuelle() ? 'bg-primary-600 text-white'
+                  : i === etapeActuelle() ? 'bg-white text-primary-700 ring-2 ring-primary-600'
+                  : 'bg-white text-gray-400 ring-1 ring-gray-200'">
+                @if (i < etapeActuelle()) {
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                } @else {
+                  {{ i + 1 }}
+                }
               </span>
-            </dd>
-          </div>
-          <div class="flex justify-between">
-            <dt class="text-gray-400">Responsable</dt>
-            <dd class="font-medium">
-              @if (ot()!.responsable) { {{ ot()!.responsable!.prenom }} {{ ot()!.responsable!.nom }} }
-            </dd>
-          </div>
-          <div class="flex justify-between">
-            <dt class="text-gray-400">Date planifiée</dt>
-            <dd class="font-medium">{{ ot()!.datePlanifiee ? (ot()!.datePlanifiee | date:'dd/MM/yyyy') : 'N/R' }}</dd>
-          </div>
-          <div class="flex justify-between">
-            <dt class="text-gray-400">Début effectif</dt>
-            <dd class="font-medium">{{ ot()!.dateDebut ? (ot()!.dateDebut | date:'dd/MM/yyyy') : 'N/R' }}</dd>
-          </div>
-          <div class="flex justify-between">
-            <dt class="text-gray-400">Fin effectif</dt>
-            <dd class="font-medium">{{ ot()!.dateFin ? (ot()!.dateFin | date:'dd/MM/yyyy') : 'N/R' }}</dd>
-          </div>
-          @if (ot()!.prestatireExterne) {
-            <div class="flex justify-between">
-              <dt class="text-gray-400">Prestataire</dt>
-              <dd class="font-medium">{{ ot()!.prestatireExterne }}</dd>
+              <span class="mt-2 hidden text-xs sm:block" [ngClass]="i <= etapeActuelle() ? 'font-medium text-gray-900' : 'text-gray-400'">{{ e.label }}</span>
+            </li>
+          }
+        </ol>
+        <p class="mt-3 text-center text-sm text-gray-600 sm:hidden">Étape {{ etapeActuelle() + 1 }} / {{ etapes.length }} : <span class="font-medium text-gray-900">{{ statutLabel(o.statut) }}</span></p>
+        @if (enAttente()) {
+          <p class="mt-3 flex items-center justify-center gap-2 text-sm text-orange-700">
+            <span class="h-2 w-2 animate-pulse rounded-full bg-orange-500"></span>
+            Travaux suspendus : {{ enAttente() }}
+          </p>
+        }
+      }
+    </section>
+
+    <div class="grid gap-5 lg:grid-cols-3">
+      <!-- ── Colonne principale ──────────────────────────────────────── -->
+      <div class="space-y-5 lg:col-span-2">
+
+        <!-- Description et origine -->
+        <section class="carte p-5">
+          <h2 class="text-sm font-semibold text-gray-900">Travaux demandés</h2>
+          <p class="mt-2 whitespace-pre-line text-sm text-gray-700">{{ o.description || 'Aucune description.' }}</p>
+          @if (o.demandeIntervention) {
+            <div class="mt-4 flex items-start gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-inset ring-gray-200/70">
+              <svg class="mt-0.5 h-4 w-4 shrink-0 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+              <div class="min-w-0 text-sm">
+                <p class="font-medium text-gray-900">Issu du signalement <span class="font-mono">{{ o.demandeIntervention.numeroDI }}</span></p>
+                <p class="line-clamp-2 text-gray-600">{{ o.demandeIntervention.description }}</p>
+              </div>
             </div>
           }
-        </dl>
-      </div>
+        </section>
 
-      <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5">
-        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Coûts & Temps</h2>
-        <dl class="space-y-3 text-sm">
-          <div class="flex justify-between">
-            <dt class="text-gray-400">Heures internes</dt>
-            <dd class="font-medium">{{ ot()!.heuresInternesTotal ?? 0 }} h</dd>
+        <!-- Mécaniciens -->
+        <section class="carte">
+          <div class="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
+            <h2 class="text-sm font-semibold text-gray-900">Équipe d’intervention</h2>
+            <span class="text-xs text-gray-500">{{ o.mecaniciens?.length ?? 0 }} mécanicien(s)</span>
           </div>
-          <div class="flex justify-between">
-            <dt class="text-gray-400">Coût pièces</dt>
-            <dd class="font-medium">{{ (ot()!.coutPiecesTotal ?? 0) | number:'1.0-0' }} FCFA</dd>
-          </div>
-          <div class="flex justify-between">
-            <dt class="text-gray-400">Coût prestataire</dt>
-            <dd class="font-medium">{{ (ot()!.coutPrestataire ?? 0) | number:'1.0-0' }} FCFA</dd>
-          </div>
-        </dl>
-        @if (ot()!.description) {
-          <div class="mt-4 pt-4 border-t border-gray-100">
-            <p class="text-xs text-gray-400 mb-1">Description</p>
-            <p class="text-sm text-gray-700">{{ ot()!.description }}</p>
-          </div>
-        }
-      </div>
-    </div>
 
-    <!-- Mécaniciens affectés -->
-    @if (ot()!.mecaniciens && ot()!.mecaniciens!.length > 0) {
-      <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5">
-        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Mécaniciens affectés</h2>
-        <div class="space-y-3">
-          @for (m of ot()!.mecaniciens; track m.id) {
-            <div class="flex items-start justify-between">
-              <div>
-                <p class="font-medium text-gray-800">
-                  @if (m.mecanicien) { {{ m.mecanicien.prenom }} {{ m.mecanicien.nom }} }
-                </p>
-                @if (m.travauxEffectues) {
-                  <p class="text-sm text-gray-500">{{ m.travauxEffectues }}</p>
+          @if (!o.mecaniciens?.length) {
+            <p class="px-5 py-8 text-center text-sm text-gray-500">Aucun mécanicien affecté pour l’instant.</p>
+          } @else {
+            <ul class="divide-y divide-gray-100">
+              @for (m of o.mecaniciens; track m.id) {
+                <li class="px-5 py-4">
+                  <div class="flex items-start gap-3">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-800" aria-hidden="true">{{ initiales(m.mecanicien) }}</span>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-wrap items-center gap-x-2">
+                        <p class="font-medium text-gray-900">{{ m.mecanicien?.prenom }} {{ m.mecanicien?.nom }}</p>
+                        @if (m.tempsPasse) {
+                          <span class="text-xs text-gray-500">· {{ m.tempsPasse }} h</span>
+                        }
+                      </div>
+                      @if (m.diagnostic) {
+                        <p class="mt-1 text-sm text-gray-600"><span class="font-medium text-gray-700">Diagnostic :</span> {{ m.diagnostic }}</p>
+                      }
+                      @if (m.travauxEffectues) {
+                        <p class="mt-1 text-sm text-gray-600"><span class="font-medium text-gray-700">Travaux :</span> {{ m.travauxEffectues }}</p>
+                      }
+                      @if (!m.diagnostic && !m.travauxEffectues && travauxOuvert() !== m.mecanicienId) {
+                        <p class="mt-1 text-sm text-gray-400">Pas encore de compte rendu.</p>
+                      }
+                    </div>
+                    <div class="flex shrink-0 items-center gap-1">
+                      @if (peutSaisirTravaux(m) && travauxOuvert() !== m.mecanicienId) {
+                        <button type="button" class="btn-action" (click)="ouvrirTravaux(m)">Compte rendu</button>
+                      }
+                      @if (peut('ot.affecter') && !fige()) {
+                        <button type="button" class="btn-icone-danger" (click)="retirer(m)" title="Retirer" aria-label="Retirer ce mécanicien">
+                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                      }
+                    </div>
+                  </div>
+
+                  @if (travauxOuvert() === m.mecanicienId) {
+                    <form class="mt-4 space-y-3 rounded-xl bg-gray-50 p-4 ring-1 ring-inset ring-gray-200/70" (ngSubmit)="enregistrerTravaux(m)">
+                      <div class="grid gap-3 sm:grid-cols-[8rem_1fr]">
+                        <label class="block text-sm">
+                          <span class="mb-1 block font-medium text-gray-700">Temps (h)</span>
+                          <input type="number" min="0" step="0.25" class="champ bg-white" name="tempsPasse" [(ngModel)]="travaux.tempsPasse" />
+                        </label>
+                        <label class="block text-sm">
+                          <span class="mb-1 block font-medium text-gray-700">Diagnostic</span>
+                          <input type="text" class="champ bg-white" name="diagnostic" [(ngModel)]="travaux.diagnostic" placeholder="Cause identifiée" />
+                        </label>
+                      </div>
+                      <label class="block text-sm">
+                        <span class="mb-1 block font-medium text-gray-700">Travaux effectués</span>
+                        <textarea rows="3" class="champ bg-white" name="travauxEffectues" [(ngModel)]="travaux.travauxEffectues" placeholder="Pièces changées, réglages…"></textarea>
+                      </label>
+                      <div class="flex justify-end gap-2">
+                        <button type="button" class="btn-secondaire" (click)="travauxOuvert.set(null)">Annuler</button>
+                        <button type="submit" class="btn-primaire">Enregistrer</button>
+                      </div>
+                    </form>
+                  }
+                </li>
+              }
+            </ul>
+          }
+
+          @if (peut('ot.affecter') && !fige()) {
+            <div class="flex flex-col gap-2 border-t border-gray-100 px-5 py-4 sm:flex-row">
+              <label class="sr-only" for="choix-mecanicien">Mécanicien à affecter</label>
+              <select id="choix-mecanicien" class="champ sm:flex-1" [(ngModel)]="mecanicienChoisi">
+                <option [ngValue]="null">
+                  {{ mecaniciensNonAffectes().length ? 'Choisir un mécanicien…' : 'Aucun autre mécanicien disponible' }}
+                </option>
+                @for (m of mecaniciensNonAffectes(); track m.id) {
+                  <option [ngValue]="m.id">{{ m.prenom }} {{ m.nom }}</option>
                 }
+              </select>
+              <button type="button" class="btn-primaire" [disabled]="!mecanicienChoisi" (click)="affecter()">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Affecter
+              </button>
+            </div>
+          }
+        </section>
+
+        <!-- Photos -->
+        <section class="carte">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
+            <h2 class="text-sm font-semibold text-gray-900">Photos et documents</h2>
+            @if (peut('ot.photo') && !fige()) {
+              <div class="flex items-center gap-2">
+                <label class="sr-only" for="type-photo">Type de photo</label>
+                <select id="type-photo" class="champ w-auto py-1.5 pr-8 text-xs" [(ngModel)]="typePhoto">
+                  <option value="AVANT">Avant</option>
+                  <option value="APRES">Après</option>
+                  <option value="PIECE">Pièce</option>
+                </select>
+                <label class="btn-action cursor-pointer" [class.opacity-50]="envoiPhoto()">
+                  @if (envoiPhoto()) {
+                    <span class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600"></span>
+                    Envoi…
+                  } @else {
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Ajouter
+                  }
+                  <input type="file" class="sr-only" multiple [accept]="typesAcceptes" [disabled]="envoiPhoto()" (change)="envoyerPhotos($event)" />
+                </label>
               </div>
-              @if (m.tempsPasse) {
-                <span class="text-sm text-gray-500">{{ m.tempsPasse }} h</span>
+            }
+          </div>
+          @if (photosParType().length === 0) {
+            <p class="px-5 py-8 text-center text-sm text-gray-500">Aucune photo. Ajoutez des photos avant et après l’intervention pour garder une trace.</p>
+          } @else {
+            <div class="space-y-4 p-5">
+              @for (g of photosParType(); track g.type) {
+                <div>
+                  <p class="mb-2 text-xs font-medium text-gray-500">{{ g.label }}</p>
+                  <ul class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    @for (p of g.photos; track p.id) {
+                      <li class="group relative aspect-square overflow-hidden rounded-xl bg-gray-100 ring-1 ring-gray-200/70">
+                        @if (estPdf(p.url)) {
+                          <a [href]="urlFichier(p.url)" target="_blank" rel="noopener" class="flex h-full flex-col items-center justify-center gap-1 text-xs font-medium text-gray-600 hover:text-primary-700">
+                            <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            PDF
+                          </a>
+                        } @else {
+                          <button type="button" class="h-full w-full" (click)="apercu.set(urlFichier(p.url))" aria-label="Agrandir la photo">
+                            <img [src]="urlFichier(p.url)" alt="" loading="lazy" class="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                          </button>
+                        }
+                        @if (peut('ot.photo.supprimer')) {
+                          <button type="button" (click)="supprimerPhoto(p.id)" aria-label="Supprimer la photo"
+                            class="absolute right-1.5 top-1.5 rounded-lg bg-black/55 p-1 text-white opacity-100 hover:bg-red-600 md:opacity-0 md:group-hover:opacity-100">
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                          </button>
+                        }
+                      </li>
+                    }
+                  </ul>
+                </div>
               }
             </div>
           }
-        </div>
+        </section>
       </div>
-    }
 
-    <!-- Notes de contrôle -->
-    @if (ot()!.notesControle) {
-      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
-        <p class="text-sm font-semibold text-amber-800 mb-1">Notes de contrôle</p>
-        <p class="text-sm text-amber-700">{{ ot()!.notesControle }}</p>
-      </div>
-    }
+      <!-- ── Colonne latérale ────────────────────────────────────────── -->
+      <aside class="space-y-5">
+        <section class="carte p-5">
+          <h2 class="text-sm font-semibold text-gray-900">Planning</h2>
+          <dl class="mt-3 space-y-2.5 text-sm">
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Créé le</dt><dd class="font-medium text-gray-900">{{ o.createdAt | date: 'dd/MM/yyyy' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Planifié le</dt><dd class="font-medium text-gray-900">{{ o.datePlanifiee ? (o.datePlanifiee | date: 'dd/MM/yyyy') : '—' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Début</dt><dd class="font-medium text-gray-900">{{ o.dateDebut ? (o.dateDebut | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Fin</dt><dd class="font-medium text-gray-900">{{ o.dateFin ? (o.dateFin | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Responsable</dt><dd class="text-right font-medium text-gray-900">{{ o.responsable ? o.responsable.prenom + ' ' + o.responsable.nom : '—' }}</dd></div>
+          </dl>
+        </section>
+
+        <section class="carte p-5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-gray-900">Coûts</h2>
+            @if (peut('ot.couts') && !coutsOuvert()) {
+              <button type="button" class="btn-action" (click)="ouvrirCouts()">{{ coutTotal() || o.heuresInternesTotal ? 'Modifier' : 'Saisir' }}</button>
+            }
+          </div>
+
+          @if (coutsOuvert()) {
+            <form class="mt-4 space-y-3" (ngSubmit)="enregistrerCouts()">
+              <label class="block text-sm">
+                <span class="mb-1 block font-medium text-gray-700">Pièces (FCFA)</span>
+                <input type="number" min="0" step="1" class="champ" name="coutPiecesTotal" [(ngModel)]="couts.coutPiecesTotal" />
+              </label>
+              <label class="block text-sm">
+                <span class="mb-1 block font-medium text-gray-700">Prestataire (FCFA)</span>
+                <input type="number" min="0" step="1" class="champ" name="coutPrestataire" [(ngModel)]="couts.coutPrestataire" />
+              </label>
+              <label class="block text-sm">
+                <span class="mb-1 block font-medium text-gray-700">Nom du prestataire</span>
+                <input type="text" maxlength="200" class="champ" name="prestatireExterne" [(ngModel)]="couts.prestatireExterne" placeholder="Garage, sous-traitant…" />
+              </label>
+              <label class="block text-sm">
+                <span class="mb-1 block font-medium text-gray-700">Heures internes</span>
+                <input type="number" min="0" step="0.25" class="champ" name="heuresInternesTotal" [(ngModel)]="couts.heuresInternesTotal" />
+              </label>
+              <div class="flex justify-end gap-2 pt-1">
+                <button type="button" class="btn-secondaire" (click)="coutsOuvert.set(false)">Annuler</button>
+                <button type="submit" class="btn-primaire">Enregistrer</button>
+              </div>
+            </form>
+          } @else {
+            <p class="mt-3 text-2xl font-semibold tabular-nums text-gray-900">{{ coutTotal() | number: '1.0-0' : 'fr' }} <span class="text-sm font-normal text-gray-500">FCFA</span></p>
+            <dl class="mt-3 space-y-2 text-sm">
+              <div class="flex justify-between"><dt class="text-gray-500">Pièces</dt><dd class="tabular-nums text-gray-900">{{ (o.coutPiecesTotal ?? 0) | number: '1.0-0' : 'fr' }}</dd></div>
+              <div class="flex justify-between"><dt class="text-gray-500">Prestataire</dt><dd class="tabular-nums text-gray-900">{{ (o.coutPrestataire ?? 0) | number: '1.0-0' : 'fr' }}</dd></div>
+              @if (o.prestatireExterne) {
+                <div class="flex justify-between gap-4"><dt class="text-gray-500">Chez</dt><dd class="text-right text-gray-900">{{ o.prestatireExterne }}</dd></div>
+              }
+              <div class="flex justify-between"><dt class="text-gray-500">Main-d’œuvre interne</dt><dd class="tabular-nums text-gray-900">{{ o.heuresInternesTotal ?? 0 }} h</dd></div>
+            </dl>
+          }
+        </section>
+
+        @if (o.notesControle) {
+          <section class="rounded-2xl bg-amber-50 p-5 ring-1 ring-amber-200">
+            <h2 class="text-sm font-semibold text-amber-900">Notes de contrôle</h2>
+            <p class="mt-2 whitespace-pre-line text-sm text-amber-800">{{ o.notesControle }}</p>
+          </section>
+        }
+      </aside>
+    </div>
+  }
+
+  @if (!loading() && !ot()) {
+    <div class="carte px-4 py-16 text-center">
+      <p class="text-sm font-medium text-gray-900">Ordre de travail introuvable</p>
+      <a routerLink="/ordres-travail" class="mt-2 inline-block text-sm font-medium text-primary-600 hover:text-primary-800">Retour à la liste</a>
+    </div>
   }
 </div>
+
+<!-- ══ Confirmation d'un changement de statut ═══════════════════════════ -->
+@if (statutDemande(); as s) {
+  <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 backdrop-blur-xs sm:items-center" (click)="statutDemande.set(null)">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="titre-statut" (click)="$event.stopPropagation()">
+      <h3 id="titre-statut" class="text-base font-semibold text-gray-900">
+        {{ s === 'ANNULE' ? 'Annuler cet ordre de travail ?' : 'Passer à « ' + statutLabel(s) + ' »' }}
+      </h3>
+      <p class="mt-1 text-sm text-gray-500">
+        @if (s === 'ANNULE') {
+          Le véhicule repassera « Disponible ». Cette action est définitive.
+        } @else if (s === 'CLOTURE') {
+          L’OT sera clôturé et le véhicule repassera « Disponible ».
+        } @else {
+          Notez ce qui a été vérifié avant de valider.
+        }
+      </p>
+      @if (s !== 'ANNULE') {
+        <label class="mt-4 block text-sm">
+          <span class="mb-1 block font-medium text-gray-700">Notes de contrôle <span class="font-normal text-gray-400">(facultatif)</span></span>
+          <textarea rows="3" class="champ" [(ngModel)]="noteStatut" placeholder="Essai routier OK, niveaux vérifiés…"></textarea>
+        </label>
+      }
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" class="btn-secondaire" (click)="statutDemande.set(null)">Retour</button>
+        <button type="button" [disabled]="actionLoading()" (click)="changerStatut(s, noteStatut)"
+          [ngClass]="s === 'ANNULE' ? 'inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50' : 'btn-primaire'">
+          {{ s === 'ANNULE' ? 'Annuler l’OT' : 'Valider' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ══ Aperçu d'une photo ═══════════════════════════════════════════════ -->
+@if (apercu(); as src) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" (click)="apercu.set(null)" role="dialog" aria-modal="true" aria-label="Aperçu de la photo">
+    <img [src]="src" alt="" class="max-h-full max-w-full rounded-xl shadow-2xl" />
+    <button type="button" class="absolute right-4 top-4 rounded-full bg-white/15 p-2 text-white hover:bg-white/25" aria-label="Fermer" (click)="apercu.set(null)">
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+}

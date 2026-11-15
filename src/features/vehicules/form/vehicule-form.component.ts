@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { VehiculesService } from '../../../core/services/vehicules.service';
@@ -7,7 +7,7 @@ import { VehiculesService } from '../../../core/services/vehicules.service';
 @Component({
   selector: 'app-vehicule-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [NgClass, ReactiveFormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './vehicule-form.component.html',
 })
@@ -19,6 +19,9 @@ export class VehiculeFormComponent implements OnInit {
 
   isEdit = false;
   private vehiculeId?: number;
+  vehiculeIdAffiche: number | null = null;
+  chargement = signal(false);
+  readonly anneeMax = new Date().getFullYear() + 1;
   loading = signal(false);
   erreurServeur = signal('');
   entites = signal<string[]>([]);
@@ -30,11 +33,11 @@ export class VehiculeFormComponent implements OnInit {
     modele: ['', Validators.required],
     typeVehicule: ['', Validators.required],
     numeroSerie: ['', Validators.required],
-    annee: [null as number | null],
+    annee: [null as number | null, [Validators.min(1950), Validators.max(new Date().getFullYear() + 1)]],
     carburant: [''],
     couleur: [''],
-    kilometrage: [0],
-    heuresMoteur: [0],
+    kilometrage: [0, Validators.min(0)],
+    heuresMoteur: [0, Validators.min(0)],
     dateAcquisition: [''],
     entite: [''],
     departement: [''],
@@ -75,13 +78,17 @@ export class VehiculeFormComponent implements OnInit {
     if (id && id !== 'nouveau') {
       this.isEdit = true;
       this.vehiculeId = Number(id);
+      this.vehiculeIdAffiche = this.vehiculeId;
+      this.chargement.set(true);
       this.svc.getOne(this.vehiculeId).subscribe({
-        next: (v) =>
+        next: (v) => {
           this.form.patchValue({
             ...v,
             dateAcquisition: v.dateAcquisition ? v.dateAcquisition.substring(0, 10) : '',
             carburant: v.carburant ?? '',
-          }),
+          } as any);
+          this.chargement.set(false);
+        },
         error: () => this.router.navigate(['/vehicules']),
       });
     }

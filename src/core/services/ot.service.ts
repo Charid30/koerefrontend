@@ -40,8 +40,25 @@ export class OtService {
     return this.api.patch<OrdreTravail>(`/ordres-travail/${id}/statut`, { statut, notesControle });
   }
 
+  /** Mécaniciens actifs qu'on peut affecter (réservé à l'encadrement maintenance) */
+  mecaniciens() {
+    return this.api.get<{ id: number; nom: string; prenom: string }[]>('/ordres-travail/mecaniciens');
+  }
+
   affecterMecanicien(otId: number, mecanicienId: number) {
     return this.api.post<any>(`/ordres-travail/${otId}/mecaniciens/${mecanicienId}`, {});
+  }
+
+  retirerMecanicien(otId: number, mecanicienId: number) {
+    return this.api.delete<any>(`/ordres-travail/${otId}/mecaniciens/${mecanicienId}`);
+  }
+
+  updateTravaux(otId: number, mecanicienId: number, data: { tempsPasse?: number; diagnostic?: string; travauxEffectues?: string }) {
+    return this.api.patch<any>(`/ordres-travail/${otId}/mecaniciens/${mecanicienId}/travaux`, data);
+  }
+
+  updateCouts(id: number, data: { coutPrestataire?: number; coutPiecesTotal?: number; heuresInternesTotal?: number; prestatireExterne?: string }) {
+    return this.api.patch<OrdreTravail>(`/ordres-travail/${id}/couts`, data);
   }
 
   delete(id: number) {

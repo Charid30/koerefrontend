@@ -4,6 +4,21 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, filter, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
+/**
+ * Rend le message d'erreur de l'API affichable tel quel :
+ * la validation renvoie une liste de messages, on les joint en une phrase.
+ */
+function messageLisible(err: HttpErrorResponse): HttpErrorResponse {
+  if (err.status === 0) {
+    return new HttpErrorResponse({ ...err, url: err.url ?? undefined, error: { message: 'Serveur injoignable. Vérifiez votre connexion.' } });
+  }
+  const corps = err.error;
+  if (corps && Array.isArray(corps.message)) {
+    return new HttpErrorResponse({ ...err, url: err.url ?? undefined, error: { ...corps, message: corps.message.join(' · ') } });
+  }
+  return err;
+}
+
 // Partagé entre toutes les instances de l'intercepteur
 let isRefreshing = false;
 const refreshDone$ = new BehaviorSubject<string | null>(null);
@@ -20,7 +35,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((err: HttpErrorResponse) => {
       if (err.status !== 401 || req.url.includes('/auth/')) {
-        return throwError(() => err);
+        return throwError(() => messageLisible(err));
       }
 
       if (isRefreshing) {

@@ -1,89 +1,96 @@
 <aside
-  class="fixed lg:relative inset-y-0 left-0 z-50 flex flex-col h-screen bg-primary-950 text-white transition-all duration-300 lg:translate-x-0"
-  [class.w-64]="!collapsed()"
-  [class.w-16]="collapsed()"
+  class="zone-sombre fixed inset-y-0 left-0 z-50 flex h-dvh flex-col bg-primary-950 text-white transition-[width,transform] duration-300 lg:relative lg:translate-x-0"
+  [ngClass]="reduit() ? 'w-[4.5rem]' : 'w-72 lg:w-64'"
   [class.-translate-x-full]="!layout.mobileOpen()"
   [class.translate-x-0]="layout.mobileOpen()"
+  aria-label="Menu principal"
 >
-  <!-- Logo -->
-  <div class="flex items-center px-4 py-3 border-b border-white/10">
-    <img src="logo.png" alt="SOFARY" class="w-9 h-9 shrink-0 object-contain rounded-lg"
-      onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'" />
-    <div style="display:none" class="w-9 h-9 bg-primary-500 rounded-lg items-center justify-center shrink-0">
-      <span class="text-white font-bold text-sm">K</span>
-    </div>
-    @if (!collapsed()) {
-      <span class="ml-3 text-lg font-bold tracking-wide text-white">SOFARY</span>
+  <!-- Marque -->
+  <div class="flex h-16 shrink-0 items-center gap-3 px-4" [class.justify-center]="reduit()">
+    <img src="logo.png" alt="" class="h-9 w-9 shrink-0 rounded-xl bg-white object-contain p-0.5" />
+    @if (!reduit()) {
+      <div class="min-w-0 leading-tight">
+        <p class="text-base font-semibold tracking-wide">SOFARY</p>
+        <p class="truncate text-[11px] text-primary-200/70">Maintenance de flotte</p>
+      </div>
     }
-    <button
-      (click)="toggleCollapse()"
-      class="ml-auto p-1 rounded-sm hover:bg-white/10 text-primary-200/70 hover:text-white hidden lg:block"
-    >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          [attr.d]="collapsed() ? 'M9 5l7 7-7 7' : 'M15 19l-7-7 7-7'" />
-      </svg>
-    </button>
-    <!-- Bouton fermer sur mobile -->
-    <button
-      (click)="layout.close()"
-      class="ml-auto p-1 rounded-sm hover:bg-white/10 text-primary-200/70 hover:text-white lg:hidden"
-    >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
+    <button type="button" (click)="layout.close()" class="ml-auto rounded-lg p-1.5 text-primary-200/70 hover:bg-white/10 hover:text-white lg:hidden" aria-label="Fermer le menu">
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
 
   <!-- Navigation -->
-  <nav class="flex-1 overflow-y-auto py-4 space-y-1 px-2">
-    @for (item of visibleItems(); track item.route) {
-      <a
-        [routerLink]="item.route"
-        routerLinkActive="bg-primary-600 text-white before:bg-brand-red"
-        [routerLinkActiveOptions]="{ exact: item.route === '/tableau-de-bord' }"
-        class="flex items-center px-2 py-2.5 relative rounded-lg text-primary-100/80 hover:bg-white/10 hover:text-white group before:absolute before:left-0 before:inset-y-2 before:w-1 before:rounded-r-full"
-      >
-        <span class="w-5 h-5 shrink-0 text-primary-200/70 group-[.bg-primary-600]:text-white">
-          <ng-container [ngSwitch]="item.icon">
-            <svg *ngSwitchCase="'grid'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-            <svg *ngSwitchCase="'truck'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zm0 0l2-2 2-5H13v7z"/></svg>
-            <svg *ngSwitchCase="'clipboard-check'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-            <svg *ngSwitchCase="'wrench'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            <svg *ngSwitchCase="'calendar'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            <svg *ngSwitchCase="'archive'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
-            <svg *ngSwitchCase="'chart-bar'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            <svg *ngSwitchCase="'bell'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-            <svg *ngSwitchCase="'users'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-            <svg *ngSwitchCase="'alert'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            <svg *ngSwitchCase="'download'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <svg *ngSwitchCase="'smartphone'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-          </ng-container>
-        </span>
-        @if (!collapsed()) {
-          <span class="ml-3 text-sm font-medium">{{ item.label }}</span>
+  <nav class="flex-1 space-y-5 overflow-y-auto px-3 py-3">
+    @for (g of groupesVisibles(); track g.titre) {
+      <div>
+        @if (!reduit()) {
+          <p class="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-primary-200/50">{{ g.titre }}</p>
+        } @else {
+          <div class="mx-auto mb-2 h-px w-6 bg-white/10" aria-hidden="true"></div>
         }
-      </a>
+        <ul class="space-y-0.5">
+          @for (item of g.items; track item.route) {
+            <li>
+              <a
+                [routerLink]="item.route"
+                routerLinkActive="!bg-white/[0.12] !text-white before:!bg-brand-red"
+                [routerLinkActiveOptions]="{ exact: item.route === '/tableau-de-bord' }"
+                #rla="routerLinkActive"
+                [attr.aria-current]="rla.isActive ? 'page' : null"
+                [attr.title]="reduit() ? item.label : null"
+                class="group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-primary-100/75 hover:bg-white/[0.07] hover:text-white before:absolute before:inset-y-2 before:-left-3 before:w-1 before:rounded-r-full before:bg-transparent"
+                [class.justify-center]="reduit()"
+              >
+                <span class="h-5 w-5 shrink-0" aria-hidden="true">
+                  @switch (item.icon) {
+                    @case ('grid') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg> }
+                    @case ('truck') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zm0 0l2-2 2-5H13v7z"/></svg> }
+                    @case ('clipboard-check') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg> }
+                    @case ('wrench') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085"/></svg> }
+                    @case ('calendar') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> }
+                    @case ('archive') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg> }
+                    @case ('chart-bar') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg> }
+                    @case ('users') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg> }
+                    @case ('alert') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> }
+                    @case ('download') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> }
+                    @case ('smartphone') { <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg> }
+                  }
+                </span>
+                @if (!reduit()) {
+                  <span class="truncate">{{ item.label }}</span>
+                } @else {
+                  <span class="sr-only">{{ item.label }}</span>
+                }
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
     }
   </nav>
 
-  <!-- Profil utilisateur -->
+  <!-- Repli (ordinateur) -->
+  <button type="button" (click)="toggleCollapse()"
+    class="mx-3 mb-2 hidden items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium text-primary-200/60 hover:bg-white/[0.07] hover:text-white lg:flex"
+    [class.justify-center]="reduit()" [attr.aria-label]="collapsed() ? 'Déplier le menu' : 'Réduire le menu'" [attr.aria-expanded]="!collapsed()">
+    <svg class="h-5 w-5 shrink-0 transition-transform" [class.rotate-180]="collapsed()" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+    @if (!reduit()) { Réduire le menu }
+  </button>
+
+  <!-- Utilisateur -->
   <div class="border-t border-white/10 p-3">
-    <div class="flex items-center">
-      <div class="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center shrink-0">
-        <span class="text-white text-xs font-bold">
-          {{ user()?.prenom?.[0] }}{{ user()?.nom?.[0] }}
-        </span>
-      </div>
-      @if (!collapsed()) {
-        <div class="ml-2 flex-1 min-w-0">
-          <p class="text-sm font-medium text-white truncate">{{ user()?.prenom }} {{ user()?.nom }}</p>
-          <p class="text-xs text-primary-200/70 truncate">{{ roleLabel() }}</p>
-        </div>
-        <button (click)="logout()" class="ml-2 p-1 text-primary-200/70 hover:text-white rounded-sm" title="Déconnexion">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-          </svg>
+    <div class="flex items-center gap-3" [class.justify-center]="reduit()">
+      <a routerLink="/profil" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold ring-2 ring-white/10 hover:ring-white/30" [attr.title]="reduit() ? 'Mon profil' : null">
+        {{ initiales() }}
+        <span class="sr-only">Mon profil</span>
+      </a>
+      @if (!reduit()) {
+        <a routerLink="/profil" class="min-w-0 flex-1 hover:opacity-90">
+          <p class="truncate text-sm font-medium">{{ user()?.prenom }} {{ user()?.nom }}</p>
+          <p class="truncate text-xs text-primary-200/70">{{ roleLabel() }}</p>
+        </a>
+        <button type="button" (click)="logout()" class="rounded-lg p-2 text-primary-200/70 hover:bg-white/10 hover:text-white" title="Déconnexion" aria-label="Se déconnecter">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
         </button>
       }
     </div>

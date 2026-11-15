@@ -1,85 +1,82 @@
-<div class="p-6 max-w-2xl mx-auto">
+<div class="page max-w-4xl">
+  <header>
+    <h1 class="page-titre">Application mobile</h1>
+    <p class="page-sous-titre">Inspections, signalements et suivi des interventions depuis le terrain, sur Android.</p>
+  </header>
 
-  <!-- En-tête -->
-  <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">Application mobile</h1>
-    <p class="text-gray-500 mt-1">Téléchargez l'application SOFARY sur votre smartphone Android.</p>
-  </div>
+  <section class="carte overflow-hidden">
+    <div class="grid md:grid-cols-[1fr_15rem]">
+      <div class="p-6 sm:p-8">
+        <div class="flex items-center gap-4">
+          <img src="icon-192x192.png" alt="" class="h-16 w-16 rounded-2xl shadow-md ring-1 ring-gray-200/70" />
+          <div>
+            <p class="text-lg font-semibold text-gray-900">SOFARY GMAO</p>
+            <p class="text-sm text-gray-500">Android 8.0 ou plus récent @if (taille()) { · {{ taille() }} }</p>
+          </div>
+        </div>
 
-  <!-- Carte principale -->
-  <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-6">
+        <ul class="mt-6 space-y-2.5 text-sm text-gray-700">
+          @for (f of ['Inspections avec photos des défauts', 'Signalement de panne en quelques secondes', 'Suivi des ordres de travail et des entretiens']; track f) {
+            <li class="flex items-center gap-2.5">
+              <span class="flex h-5 w-5 items-center justify-center rounded-full bg-primary-50 text-primary-700" aria-hidden="true">
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </span>
+              {{ f }}
+            </li>
+          }
+        </ul>
 
-    <!-- Bandeau logo -->
-    <div class="bg-linear-to-br from-blue-600 to-blue-800 p-8 flex flex-col items-center text-center">
-      <img src="logo.png" alt="SOFARY" class="w-24 h-24 object-contain mb-4"
-           onerror="this.style.display='none'" />
-      <h2 class="text-white text-2xl font-bold">SOFARY</h2>
-      <p class="text-blue-200 text-sm mt-1">Gestion de flotte véhicules</p>
-      <span class="mt-3 bg-blue-500/40 text-white text-xs font-semibold px-3 py-1 rounded-full">
-        Version {{ version }} — Android
-      </span>
-    </div>
-
-    <!-- Bouton de téléchargement -->
-    <div class="p-6 flex flex-col items-center gap-3">
-      <a [href]="apkUrl" download
-         class="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors w-full justify-center max-w-xs">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-        </svg>
-        Télécharger l'APK
-      </a>
-
-      <!-- URL copiable -->
-      <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 w-full max-w-sm">
-        <span class="text-xs text-gray-500 truncate flex-1 font-mono">{{ apkUrl }}</span>
-        <button (click)="copyUrl()"
-                class="shrink-0 text-blue-600 hover:text-blue-800 text-xs font-semibold whitespace-nowrap">
-          Copier
-        </button>
+        <div class="mt-7">
+          @switch (etat()) {
+            @case ('verification') {
+              <div class="h-10 w-56 animate-pulse rounded-xl bg-gray-100"></div>
+            }
+            @case ('disponible') {
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <a [href]="apkChemin" download="sofary.apk" class="btn-primaire px-5 py-2.5">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                  Télécharger l’application
+                </a>
+                <button type="button" (click)="copierLien()" class="btn-secondaire">
+                  {{ copie() ? 'Lien copié' : 'Copier le lien' }}
+                </button>
+              </div>
+            }
+            @case ('indisponible') {
+              <div class="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
+                <svg class="mt-0.5 h-5 w-5 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p>L’application n’est pas encore publiée sur ce serveur. Demandez à l’administrateur de déposer le fichier <span class="font-mono">sofary.apk</span>.</p>
+              </div>
+            }
+          }
+        </div>
       </div>
 
-      <p class="text-xs text-gray-400 text-center mt-1">
-        Fichier APK — Compatible Android 8.0 et supérieur
-      </p>
+      <div class="hidden flex-col items-center justify-center gap-3 bg-primary-950 p-6 text-center md:flex">
+        <img src="logo.png" alt="" class="h-20 w-20 rounded-2xl bg-white object-contain p-2" />
+        <p class="text-sm font-medium text-white">Vos identifiants habituels</p>
+        <p class="text-xs text-primary-200/80">Le même compte fonctionne sur le site et sur le téléphone.</p>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Instructions d'installation -->
-  <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-    <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
-      Instructions d'installation
-    </h3>
-    <ol class="space-y-4">
-      @for (step of steps; track step.num) {
-        <li class="flex gap-4">
-          <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center shrink-0 mt-0.5">
-            {{ step.num }}
-          </div>
+  <section class="carte p-6">
+    <h2 class="text-sm font-semibold text-gray-900">Installation en 4 étapes</h2>
+    <ol class="mt-4 grid gap-4 sm:grid-cols-2">
+      @for (e of etapes; track e.titre; let i = $index) {
+        <li class="flex gap-3">
+          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-white">{{ i + 1 }}</span>
           <div>
-            <p class="font-medium text-gray-900 text-sm">{{ step.titre }}</p>
-            <p class="text-gray-500 text-sm mt-0.5">{{ step.desc }}</p>
+            <p class="text-sm font-medium text-gray-900">{{ e.titre }}</p>
+            <p class="mt-0.5 text-sm text-gray-500">{{ e.desc }}</p>
           </div>
         </li>
       }
     </ol>
-  </div>
+  </section>
 
-  <!-- Note sécurité -->
-  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-    <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-    <p class="text-sm text-amber-800">
-      L'application est distribuée en dehors du Play Store. Android vous demandera d'autoriser
-      l'installation depuis une source inconnue — c'est normal pour une application d'entreprise.
-    </p>
-  </div>
-
+  <p class="flex items-start gap-2 text-xs text-gray-500">
+    <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+    L’application est distribuée directement par votre entreprise, hors Play Store. Ne l’installez que depuis cette page.
+  </p>
 </div>

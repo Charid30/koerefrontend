@@ -1,153 +1,193 @@
-<div class="p-6 max-w-4xl mx-auto space-y-6">
+<div class="page max-w-6xl">
+
   @if (loading()) {
-    <div class="flex items-center justify-center py-20">
-      <div class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+    <div class="space-y-4" aria-busy="true">
+      <div class="h-8 w-64 animate-pulse rounded-lg bg-gray-100"></div>
+      <div class="grid gap-4 lg:grid-cols-3">
+        <div class="h-48 animate-pulse rounded-2xl bg-gray-100 lg:col-span-2"></div>
+        <div class="h-48 animate-pulse rounded-2xl bg-gray-100"></div>
+      </div>
     </div>
   }
-  @if (inspection()) {
-    <div class="flex items-center gap-3">
-      <a routerLink="/inspections" class="text-gray-400 hover:text-gray-600">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-      </a>
-      <h1 class="text-2xl font-bold text-gray-900">Inspection #{{ inspection()!.id }}</h1>
-      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-        [ngClass]="statutClass(inspection()!.statut)">
-        {{ statutLabel(inspection()!.statut) }}
-      </span>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="md:col-span-2 bg-white rounded-xl shadow-xs border border-gray-100 p-5">
-        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Informations</h2>
-        <dl class="grid grid-cols-2 gap-3 text-sm">
+  @if (inspection(); as insp) {
+    <!-- ── En-tête ─────────────────────────────────────────────────────── -->
+    <header class="page-entete">
+      <div class="min-w-0">
+        <a routerLink="/inspections" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Inspections
+        </a>
+        <div class="mt-1 flex flex-wrap items-center gap-2">
+          <h1 class="page-titre">Inspection {{ typeLabel(insp.typeInspection).toLowerCase() }}</h1>
+          <span class="badge" [ngClass]="statutClass(insp.statut)">{{ statutLabel(insp.statut) }}</span>
+        </div>
+        <p class="page-sous-titre">
+          {{ insp.dateInspection | date: 'EEEE d MMMM yyyy à HH:mm' : '' : 'fr' }}
+          @if (insp.inspecteur) { · par {{ insp.inspecteur.prenom }} {{ insp.inspecteur.nom }} }
+        </p>
+      </div>
+    </header>
+
+    <div class="grid gap-5 lg:grid-cols-3">
+      <!-- ── Véhicule et relevés ────────────────────────────────────── -->
+      <section class="carte p-5 lg:col-span-2">
+        <div class="flex items-start gap-4">
+          <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600" aria-hidden="true">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zm0 0l2-2 2-5H13v7z"/></svg>
+          </span>
+          <div class="min-w-0">
+            @if (insp.vehicule) {
+              <a [routerLink]="['/vehicules', insp.vehiculeId]" class="font-semibold text-gray-900 hover:text-primary-700">
+                {{ insp.vehicule.marque }} {{ insp.vehicule.modele }}
+              </a>
+              <p class="text-sm text-gray-500">
+                @if (insp.vehicule.immatriculation) { {{ insp.vehicule.immatriculation }} · }
+                <span class="font-mono">{{ insp.vehicule.numeroInterne }}</span>
+              </p>
+            }
+          </div>
+        </div>
+        <dl class="mt-5 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4 text-sm sm:grid-cols-3">
           <div>
-            <dt class="text-xs text-gray-400">Véhicule</dt>
-            <dd class="font-medium text-gray-800">
-              @if (inspection()!.vehicule) {
-                {{ inspection()!.vehicule!.marque }} {{ inspection()!.vehicule!.modele }}
-                <span class="text-gray-400 font-mono text-xs ml-1">({{ inspection()!.vehicule!.numeroInterne }})</span>
-              }
-            </dd>
+            <dt class="text-gray-500">Kilométrage relevé</dt>
+            <dd class="mt-0.5 font-semibold tabular-nums text-gray-900">{{ insp.kilometrageReleve != null ? (insp.kilometrageReleve | number: '1.0-0' : 'fr') + ' km' : '—' }}</dd>
           </div>
           <div>
-            <dt class="text-xs text-gray-400">Type</dt>
-            <dd class="font-medium text-gray-800">{{ typeLabel(inspection()!.typeInspection) }}</dd>
+            <dt class="text-gray-500">Heures moteur</dt>
+            <dd class="mt-0.5 font-semibold tabular-nums text-gray-900">{{ insp.heuresMoteurReleve != null ? (insp.heuresMoteurReleve | number: '1.0-0' : 'fr') + ' h' : '—' }}</dd>
           </div>
           <div>
-            <dt class="text-xs text-gray-400">Date</dt>
-            <dd class="font-medium text-gray-800">{{ inspection()!.dateInspection | date:'dd/MM/yyyy HH:mm' }}</dd>
+            <dt class="text-gray-500">Points contrôlés</dt>
+            <dd class="mt-0.5 font-semibold tabular-nums text-gray-900">{{ items().length }}</dd>
           </div>
-          <div>
-            <dt class="text-xs text-gray-400">Inspecteur</dt>
-            <dd class="font-medium text-gray-800">
-              @if (inspection()!.inspecteur) {
-                {{ inspection()!.inspecteur!.prenom }} {{ inspection()!.inspecteur!.nom }}
-              }
-            </dd>
-          </div>
-          @if (inspection()!.kilometrageReleve) {
-            <div>
-              <dt class="text-xs text-gray-400">Kilométrage relevé</dt>
-              <dd class="font-medium text-gray-800">{{ inspection()!.kilometrageReleve | number }} km</dd>
-            </div>
-          }
-          @if (inspection()!.heuresMoteurReleve) {
-            <div>
-              <dt class="text-xs text-gray-400">Heures moteur relevées</dt>
-              <dd class="font-medium text-gray-800">{{ inspection()!.heuresMoteurReleve | number }} h</dd>
-            </div>
-          }
-          @if (inspection()!.notes) {
-            <div class="col-span-2">
-              <dt class="text-xs text-gray-400">Notes</dt>
-              <dd class="text-gray-700">{{ inspection()!.notes }}</dd>
-            </div>
-          }
         </dl>
-      </div>
+        @if (insp.notes) {
+          <div class="mt-4 rounded-xl bg-gray-50 p-3 text-sm text-gray-700 ring-1 ring-inset ring-gray-200/70">
+            <p class="mb-1 text-xs font-medium text-gray-500">Remarques de l’inspecteur</p>
+            <p class="whitespace-pre-line">{{ insp.notes }}</p>
+          </div>
+        }
+      </section>
 
-      <!-- Résumé items + note globale -->
-      <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 space-y-3">
-        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Résumé</h2>
-        @if (inspection()!.noteGlobale !== null && inspection()!.noteGlobale !== undefined) {
-          <div class="flex items-center justify-center py-2">
-            <div class="text-center">
-              <div class="text-3xl font-bold"
-                [ngClass]="{
-                  'text-green-600':  inspection()!.noteGlobale! >= 16,
-                  'text-yellow-600': inspection()!.noteGlobale! >= 12 && inspection()!.noteGlobale! < 16,
-                  'text-orange-600': inspection()!.noteGlobale! >= 8  && inspection()!.noteGlobale! < 12,
-                  'text-red-600':    inspection()!.noteGlobale! < 8
-                }">
-                {{ inspection()!.noteGlobale }}
-              </div>
-              <div class="text-xs text-gray-400">/ 20</div>
-              <div class="text-xs font-medium mt-1"
-                [ngClass]="{
-                  'text-green-600':  inspection()!.noteGlobale! >= 16,
-                  'text-yellow-600': inspection()!.noteGlobale! >= 12 && inspection()!.noteGlobale! < 16,
-                  'text-orange-600': inspection()!.noteGlobale! >= 8  && inspection()!.noteGlobale! < 12,
-                  'text-red-600':    inspection()!.noteGlobale! < 8
-                }">
-                {{ inspection()!.noteGlobale! >= 16 ? 'Conforme' :
-                   inspection()!.noteGlobale! >= 12 ? 'Satisfaisant' :
-                   inspection()!.noteGlobale! >= 8  ? 'À améliorer' : 'Non conforme' }}
-              </div>
+      <!-- ── Note globale ───────────────────────────────────────────── -->
+      <section class="carte flex flex-col items-center justify-center p-5 text-center">
+        @if (insp.noteGlobale != null) {
+          <div class="relative h-32 w-32">
+            <svg viewBox="0 0 100 100" class="h-full w-full -rotate-90" aria-hidden="true">
+              <circle cx="50" cy="50" r="42" fill="none" class="stroke-gray-100" stroke-width="9" />
+              <circle cx="50" cy="50" r="42" fill="none" stroke-width="9" stroke-linecap="round"
+                [ngClass]="traitNote(insp.noteGlobale)" [attr.stroke-dasharray]="arc(insp.noteGlobale)" />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span class="text-3xl font-bold tabular-nums" [ngClass]="couleurNote(insp.noteGlobale)">{{ insp.noteGlobale }}</span>
+              <span class="text-xs text-gray-400">sur 20</span>
             </div>
           </div>
-          <div class="border-t border-gray-100 pt-3"></div>
+          <p class="mt-2 text-sm font-medium" [ngClass]="couleurNote(insp.noteGlobale)">{{ niveauNote(insp.noteGlobale) }}</p>
+        } @else {
+          <p class="text-sm text-gray-500">Pas de note globale</p>
         }
-        <div class="flex justify-between text-sm">
-          <span class="text-green-600 font-medium">✓ OUI</span>
-          <span class="font-bold">{{ countResultat('OK') }}</span>
+        <div class="mt-4 grid w-full grid-cols-3 gap-2 text-center">
+          <div class="rounded-xl bg-green-50 py-2"><p class="text-lg font-semibold tabular-nums text-green-700">{{ comptes().OK }}</p><p class="text-xs text-green-700">Conformes</p></div>
+          <div class="rounded-xl bg-red-50 py-2"><p class="text-lg font-semibold tabular-nums text-red-700">{{ comptes().KO }}</p><p class="text-xs text-red-700">Défauts</p></div>
+          <div class="rounded-xl bg-gray-50 py-2"><p class="text-lg font-semibold tabular-nums text-gray-600">{{ comptes().NA }}</p><p class="text-xs text-gray-500">N/A</p></div>
         </div>
-        <div class="flex justify-between text-sm">
-          <span class="text-red-600 font-medium">✗ NON</span>
-          <span class="font-bold">{{ countResultat('KO') }}</span>
-        </div>
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-500 font-medium">N/A</span>
-          <span class="font-bold">{{ countResultat('NA') }}</span>
-        </div>
-      </div>
+        @if (tauxConformite() !== null) {
+          <p class="mt-3 text-xs text-gray-500">{{ tauxConformite() }} % des points évalués sont conformes</p>
+        }
+      </section>
     </div>
 
-    <!-- Points de contrôle -->
-    @if (inspection()!.items && inspection()!.items!.length > 0) {
-      <div class="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100">
-          <h2 class="font-semibold text-gray-800">Points de contrôle</h2>
+    <!-- ── Points de contrôle ─────────────────────────────────────────── -->
+    @if (items().length) {
+      <section class="carte">
+        <div class="barre-outils">
+          <h2 class="text-sm font-semibold text-gray-900">Points de contrôle</h2>
+          <div class="flex flex-wrap gap-1.5 lg:ml-auto" role="group" aria-label="Filtrer les points">
+            <button type="button" class="puce" [class.puce-active]="filtre() === 'tous'" (click)="filtre.set('tous')">Tous <span class="opacity-70">{{ items().length }}</span></button>
+            <button type="button" class="puce" [class.puce-active]="filtre() === 'KO'" (click)="filtre.set('KO')"><span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>Défauts <span class="opacity-70">{{ comptes().KO }}</span></button>
+            <button type="button" class="puce" [class.puce-active]="filtre() === 'OK'" (click)="filtre.set('OK')"><span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>Conformes <span class="opacity-70">{{ comptes().OK }}</span></button>
+            <button type="button" class="puce" [class.puce-active]="filtre() === 'NA'" (click)="filtre.set('NA')"><span class="h-1.5 w-1.5 rounded-full bg-gray-400"></span>N/A <span class="opacity-70">{{ comptes().NA }}</span></button>
+          </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Catégorie</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Point</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Résultat</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Observation</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-              @for (item of inspection()!.items; track $index) {
-                <tr>
-                  <td class="px-4 py-2.5 text-gray-500 text-xs">{{ item.categorie }}</td>
-                  <td class="px-4 py-2.5 text-gray-800">{{ item.libelle }}</td>
-                  <td class="px-4 py-2.5">
-                    <span class="font-semibold text-xs"
-                      [ngClass]="item.resultat === 'OK' ? 'text-green-600' : item.resultat === 'KO' ? 'text-red-600' : 'text-gray-500'">
-                      {{ item.resultat === 'KO' ? 'NON' : item.resultat === 'NA' ? 'N/A' : item.resultat }}
+
+        @if (categories().length === 0) {
+          <p class="px-5 py-10 text-center text-sm text-gray-500">Aucun point dans ce filtre.</p>
+        }
+        <div class="space-y-6 p-5">
+          @for (cat of categories(); track cat.nom) {
+            <div>
+              <h3 class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {{ cat.nom }}
+                @if (cat.defauts) {
+                  <span class="badge bg-red-50 normal-case tracking-normal text-red-700 ring-red-600/20">{{ cat.defauts }} défaut(s)</span>
+                }
+              </h3>
+              <ul class="grid gap-2 sm:grid-cols-2">
+                @for (item of cat.items; track item.id ?? $index) {
+                  <li class="flex gap-3 rounded-xl p-3 ring-1 ring-inset"
+                    [ngClass]="item.resultat === 'KO' ? 'bg-red-50/60 ring-red-200' : item.resultat === 'OK' ? 'bg-white ring-gray-200/70' : 'bg-gray-50 ring-gray-200/70'">
+                    <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                      [ngClass]="item.resultat === 'KO' ? 'bg-red-600 text-white' : item.resultat === 'OK' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'"
+                      [attr.aria-label]="item.resultat === 'KO' ? 'Défaut' : item.resultat === 'OK' ? 'Conforme' : 'Non applicable'">
+                      @if (item.resultat === 'OK') {
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                      } @else if (item.resultat === 'KO') {
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                      } @else {
+                        <span class="text-[10px] font-bold" aria-hidden="true">–</span>
+                      }
                     </span>
-                  </td>
-                  <td class="px-4 py-2.5 text-gray-500 text-xs">{{ item.observation ?? 'N/R' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+                    <div class="min-w-0 flex-1">
+                      <p class="text-sm font-medium text-gray-900">{{ item.libelle }}</p>
+                      @if (item.observation) {
+                        <p class="mt-0.5 text-sm text-gray-600">{{ item.observation }}</p>
+                      }
+                      @if (item.photoUrl || (peutPhoto() && item.resultat === 'KO')) {
+                        <div class="mt-2 flex items-center gap-2">
+                          @if (item.photoUrl) {
+                            <button type="button" (click)="apercu.set(urlFichier(item.photoUrl))" class="h-14 w-14 overflow-hidden rounded-lg ring-1 ring-gray-200" aria-label="Agrandir la photo">
+                              <img [src]="urlFichier(item.photoUrl)" alt="" loading="lazy" class="h-full w-full object-cover" />
+                            </button>
+                          }
+                          @if (peutPhoto() && item.id) {
+                            <label class="btn-action cursor-pointer">
+                              @if (envoiItem() === item.id) {
+                                <span class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600"></span>
+                              } @else {
+                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                              }
+                              {{ item.photoUrl ? 'Remplacer' : 'Photo' }}
+                              <input type="file" class="sr-only" [accept]="typesImages" [disabled]="envoiItem() !== null" (change)="ajouterPhoto(item, $event)" />
+                            </label>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
         </div>
-      </div>
+      </section>
     }
   }
+
+  @if (!loading() && !inspection()) {
+    <div class="carte px-4 py-16 text-center">
+      <p class="text-sm font-medium text-gray-900">Inspection introuvable</p>
+      <a routerLink="/inspections" class="mt-2 inline-block text-sm font-medium text-primary-600 hover:text-primary-800">Retour à la liste</a>
+    </div>
+  }
 </div>
+
+@if (apercu(); as src) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" (click)="apercu.set(null)" role="dialog" aria-modal="true" aria-label="Aperçu de la photo">
+    <img [src]="src" alt="" class="max-h-full max-w-full rounded-xl shadow-2xl" />
+    <button type="button" class="absolute right-4 top-4 rounded-full bg-white/15 p-2 text-white hover:bg-white/25" aria-label="Fermer" (click)="apercu.set(null)">
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+}

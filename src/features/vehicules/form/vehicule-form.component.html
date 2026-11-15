@@ -1,199 +1,178 @@
-<div class="p-6 max-w-3xl mx-auto space-y-6">
+<div class="page max-w-5xl">
 
-  <!-- En-tête -->
-  <div class="flex items-center gap-3">
-    <a routerLink="/vehicules" class="text-gray-400 hover:text-gray-600 shrink-0">
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-      </svg>
+  <header>
+    <a [routerLink]="isEdit ? ['/vehicules', vehiculeIdAffiche] : ['/vehicules']" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      {{ isEdit ? 'Retour à la fiche' : 'Parc véhicules' }}
     </a>
-    <h1 class="text-2xl font-bold text-gray-900">
-      {{ isEdit ? 'Modifier le véhicule' : 'Nouveau véhicule' }}
-    </h1>
-  </div>
+    <h1 class="page-titre mt-1">{{ isEdit ? 'Modifier le véhicule' : 'Nouveau véhicule' }}</h1>
+    <p class="page-sous-titre">Les champs marqués <span class="obligatoire">*</span> sont obligatoires.</p>
+  </header>
 
-  <form [formGroup]="form" (ngSubmit)="soumettre()" class="space-y-5">
+  @if (chargement()) {
+    <div class="h-96 animate-pulse rounded-2xl bg-gray-100" aria-busy="true"></div>
+  } @else {
+  <form [formGroup]="form" (ngSubmit)="soumettre()" class="space-y-5" novalidate>
+    <div class="carte divide-y divide-gray-100">
 
-    <!-- Identification -->
-    <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 space-y-4">
-      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identification</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
+      <!-- Identification -->
+      <section class="section-form">
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">N° Interne <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="numeroInterne" placeholder="VH-001"
-            class="form-input w-full rounded-lg border-gray-200 text-sm"
-            [class.border-red-400]="touched('numeroInterne')" />
-          @if (touched('numeroInterne')) {
-            <p class="text-xs text-red-500 mt-0.5">Champ obligatoire</p>
-          }
+          <h2 class="section-form-titre">Identification</h2>
+          <p class="section-form-aide">Ce qui permet de reconnaître le véhicule sur le terrain et dans les documents.</p>
         </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="numeroInterne" class="etiquette">N° interne <span class="obligatoire">*</span></label>
+            <input id="numeroInterne" type="text" formControlName="numeroInterne" placeholder="VH-001" class="champ font-mono" [class.champ-erreur]="touched('numeroInterne')" />
+            @if (touched('numeroInterne')) { <p class="message-erreur">Le numéro interne est obligatoire.</p> }
+          </div>
+          <div>
+            <label for="immatriculation" class="etiquette">Immatriculation <span class="obligatoire">*</span></label>
+            <input id="immatriculation" type="text" formControlName="immatriculation" placeholder="11 A 0001 BF" class="champ uppercase" [class.champ-erreur]="touched('immatriculation')" />
+            @if (touched('immatriculation')) { <p class="message-erreur">L’immatriculation est obligatoire.</p> }
+          </div>
+          <div>
+            <label for="marque" class="etiquette">Marque <span class="obligatoire">*</span></label>
+            <input id="marque" type="text" formControlName="marque" placeholder="Toyota" class="champ" [class.champ-erreur]="touched('marque')" />
+            @if (touched('marque')) { <p class="message-erreur">La marque est obligatoire.</p> }
+          </div>
+          <div>
+            <label for="modele" class="etiquette">Modèle <span class="obligatoire">*</span></label>
+            <input id="modele" type="text" formControlName="modele" placeholder="Land Cruiser" class="champ" [class.champ-erreur]="touched('modele')" />
+            @if (touched('modele')) { <p class="message-erreur">Le modèle est obligatoire.</p> }
+          </div>
+          <div class="sm:col-span-2">
+            <label for="numeroSerie" class="etiquette">N° de série (VIN) <span class="obligatoire">*</span></label>
+            <input id="numeroSerie" type="text" formControlName="numeroSerie" placeholder="JTMHV05J…" class="champ font-mono" [class.champ-erreur]="touched('numeroSerie')" />
+            @if (touched('numeroSerie')) { <p class="message-erreur">Le numéro de série est obligatoire.</p> }
+          </div>
+        </div>
+      </section>
 
+      <!-- Caractéristiques -->
+      <section class="section-form">
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Immatriculation <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="immatriculation" placeholder="11 A 0001 BF"
-            class="form-input w-full rounded-lg border-gray-200 text-sm"
-            [class.border-red-400]="touched('immatriculation')" />
-          @if (touched('immatriculation')) {
-            <p class="text-xs text-red-500 mt-0.5">Champ obligatoire</p>
-          }
+          <h2 class="section-form-titre">Caractéristiques</h2>
+          <p class="section-form-aide">Type, motorisation et aspect.</p>
         </div>
+        <div class="space-y-4">
+          <fieldset>
+            <legend class="etiquette">Type de véhicule <span class="obligatoire">*</span></legend>
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              @for (t of types; track t.value) {
+                <label class="flex cursor-pointer items-center justify-center rounded-xl px-3 py-2.5 text-center text-sm font-medium ring-1 ring-inset transition-colors"
+                  [ngClass]="form.value.typeVehicule === t.value ? 'bg-primary-50 text-primary-800 ring-2 ring-primary-600' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-50'">
+                  <input type="radio" class="sr-only" formControlName="typeVehicule" [value]="t.value" />
+                  {{ t.label }}
+                </label>
+              }
+            </div>
+            @if (touched('typeVehicule')) { <p class="message-erreur">Choisissez le type de véhicule.</p> }
+          </fieldset>
+          <div class="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label for="carburant" class="etiquette">Carburant</label>
+              <select id="carburant" formControlName="carburant" class="champ">
+                <option value="">Non précisé</option>
+                @for (c of carburants; track c.value) { <option [value]="c.value">{{ c.label }}</option> }
+              </select>
+            </div>
+            <div>
+              <label for="annee" class="etiquette">Année</label>
+              <input id="annee" type="number" formControlName="annee" placeholder="2024" min="1950" [max]="anneeMax" class="champ" [class.champ-erreur]="touched('annee')" />
+              @if (touched('annee')) { <p class="message-erreur">Entre 1950 et {{ anneeMax }}.</p> }
+            </div>
+            <div>
+              <label for="couleur" class="etiquette">Couleur</label>
+              <input id="couleur" type="text" formControlName="couleur" placeholder="Blanc" class="champ" />
+            </div>
+          </div>
+        </div>
+      </section>
 
+      <!-- Compteurs et état -->
+      <section class="section-form">
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Marque <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="marque" placeholder="Toyota"
-            class="form-input w-full rounded-lg border-gray-200 text-sm"
-            [class.border-red-400]="touched('marque')" />
-          @if (touched('marque')) {
-            <p class="text-xs text-red-500 mt-0.5">Champ obligatoire</p>
-          }
+          <h2 class="section-form-titre">Compteurs et état</h2>
+          <p class="section-form-aide">Les compteurs servent au calcul des entretiens préventifs.</p>
         </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="kilometrage" class="etiquette">Kilométrage</label>
+            <div class="relative">
+              <input id="kilometrage" type="number" formControlName="kilometrage" min="0" class="champ pr-10 tabular-nums" [class.champ-erreur]="touched('kilometrage')" />
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">km</span>
+            </div>
+            @if (touched('kilometrage')) { <p class="message-erreur">Le kilométrage ne peut pas être négatif.</p> }
+          </div>
+          <div>
+            <label for="heuresMoteur" class="etiquette">Heures moteur</label>
+            <div class="relative">
+              <input id="heuresMoteur" type="number" formControlName="heuresMoteur" min="0" class="champ pr-8 tabular-nums" [class.champ-erreur]="touched('heuresMoteur')" />
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">h</span>
+            </div>
+            @if (touched('heuresMoteur')) { <p class="message-erreur">Les heures ne peuvent pas être négatives.</p> }
+          </div>
+          <div>
+            <label for="statut" class="etiquette">Statut</label>
+            <select id="statut" formControlName="statut" class="champ">
+              @for (s of statuts; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
+            </select>
+          </div>
+          <div>
+            <label for="dateAcquisition" class="etiquette">Date d’acquisition</label>
+            <input id="dateAcquisition" type="date" formControlName="dateAcquisition" class="champ" />
+          </div>
+        </div>
+      </section>
 
+      <!-- Affectation -->
+      <section class="section-form">
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Modèle <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="modele" placeholder="Land Cruiser"
-            class="form-input w-full rounded-lg border-gray-200 text-sm"
-            [class.border-red-400]="touched('modele')" />
-          @if (touched('modele')) {
-            <p class="text-xs text-red-500 mt-0.5">Champ obligatoire</p>
-          }
+          <h2 class="section-form-titre">Affectation</h2>
+          <p class="section-form-aide">À qui et où le véhicule est rattaché.</p>
         </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Type de véhicule <span class="text-red-500">*</span></label>
-          <select formControlName="typeVehicule" class="form-select w-full rounded-lg border-gray-200 text-sm">
-            <option value="">Sélectionner...</option>
-            @for (t of types; track t.value) {
-              <option [value]="t.value">{{ t.label }}</option>
-            }
-          </select>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label for="entite" class="etiquette">Entité</label>
+            <input id="entite" formControlName="entite" type="text" list="entites-form" placeholder="Ouagadougou" class="champ" />
+            <datalist id="entites-form">
+              @for (e of entites(); track e) { <option [value]="e"></option> }
+            </datalist>
+          </div>
+          <div>
+            <label for="departement" class="etiquette">Département</label>
+            <input id="departement" type="text" formControlName="departement" placeholder="Logistique" class="champ" />
+          </div>
+          <div>
+            <label for="siteGeographique" class="etiquette">Site</label>
+            <input id="siteGeographique" type="text" formControlName="siteGeographique" placeholder="Dépôt central" class="champ" />
+          </div>
+          <div class="sm:col-span-3">
+            <label for="notes" class="etiquette">Notes</label>
+            <textarea id="notes" formControlName="notes" rows="3" placeholder="Équipements, particularités, historique d’achat…" class="champ"></textarea>
+          </div>
         </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">N° de série <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="numeroSerie" class="form-input w-full rounded-lg border-gray-200 text-sm"
-            [class.border-red-400]="form.get('numeroSerie')?.invalid && form.get('numeroSerie')?.touched"/>
-          @if (form.get('numeroSerie')?.invalid && form.get('numeroSerie')?.touched) {
-            <p class="text-xs text-red-500 mt-0.5">Obligatoire</p>
-          }
-        </div>
-
-      </div>
+      </section>
     </div>
 
-    <!-- Caractéristiques -->
-    <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 space-y-4">
-      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Caractéristiques</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Année</label>
-          <input type="number" formControlName="annee" placeholder="2024" min="1990" max="2030"
-            class="form-input w-full rounded-lg border-gray-200 text-sm" />
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Carburant</label>
-          <select formControlName="carburant" class="form-select w-full rounded-lg border-gray-200 text-sm">
-            <option value="">Choisir...</option>
-            @for (c of carburants; track c.value) {
-              <option [value]="c.value">{{ c.label }}</option>
-            }
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Couleur</label>
-          <input type="text" formControlName="couleur" placeholder="Blanc"
-            class="form-input w-full rounded-lg border-gray-200 text-sm" />
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Kilométrage initial</label>
-          <input type="number" formControlName="kilometrage" placeholder="0" min="0"
-            class="form-input w-full rounded-lg border-gray-200 text-sm" />
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Heures moteur</label>
-          <input type="number" formControlName="heuresMoteur" placeholder="0" min="0"
-            class="form-input w-full rounded-lg border-gray-200 text-sm" />
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Date d'acquisition</label>
-          <input type="date" formControlName="dateAcquisition"
-            class="form-input w-full rounded-lg border-gray-200 text-sm" />
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Affectation -->
-    <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 space-y-4">
-      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Affectation</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Entité (ville)</label>
-          <input formControlName="entite" type="text" list="entites-form" placeholder="Ex : Ouagadougou"
-            class="form-input w-full rounded-lg border-gray-200 text-sm" />
-          <datalist id="entites-form">
-            @for (e of entites(); track e) { <option [value]="e"></option> }
-          </datalist>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Département</label>
-          <input type="text" formControlName="departement" placeholder="Direction, Logistique…"
-            class="form-input w-full rounded-lg border-gray-200 text-sm" />
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Site géographique</label>
-          <input type="text" formControlName="siteGeographique"
-            class="form-input w-full rounded-lg border-gray-200 text-sm" />
-        </div>
-
-        <div class="sm:col-span-2">
-          <label class="block text-xs font-medium text-gray-600 mb-1">Statut</label>
-          <select formControlName="statut" class="form-select w-full rounded-lg border-gray-200 text-sm">
-            @for (s of statuts; track s.value) {
-              <option [value]="s.value">{{ s.label }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="sm:col-span-2">
-          <label class="block text-xs font-medium text-gray-600 mb-1">Notes</label>
-          <textarea formControlName="notes" rows="3" placeholder="Informations complémentaires…"
-            class="form-textarea w-full rounded-lg border-gray-200 text-sm resize-none"></textarea>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Erreur serveur -->
     @if (erreurServeur()) {
-      <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+      <div class="flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700 ring-1 ring-red-200" role="alert">
+        <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         {{ erreurServeur() }}
       </div>
     }
 
-    <!-- Actions -->
-    <div class="flex items-center justify-end gap-3">
-      <a routerLink="/vehicules"
-        class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-        Annuler
-      </a>
-      <button type="submit" [disabled]="loading()"
-        class="inline-flex items-center gap-2 px-5 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-60 transition-colors">
+    <div class="barre-actions">
+      <a [routerLink]="isEdit ? ['/vehicules', vehiculeIdAffiche] : ['/vehicules']" class="btn-secondaire">Annuler</a>
+      <button type="submit" [disabled]="loading()" class="btn-primaire">
         @if (loading()) {
-          <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
         }
         {{ isEdit ? 'Enregistrer les modifications' : 'Créer le véhicule' }}
       </button>
     </div>
-
   </form>
+  }
 </div>

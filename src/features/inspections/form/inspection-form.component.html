@@ -1,278 +1,232 @@
-<div class="p-6 max-w-4xl mx-auto space-y-6">
-  <div class="flex items-center gap-3">
-    <a routerLink="/inspections" class="text-gray-400 hover:text-gray-600">
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-      </svg>
-    </a>
-    <h1 class="text-2xl font-bold text-gray-900">Nouvelle Inspection</h1>
-  </div>
+<div class="page max-w-5xl">
 
-  <form [formGroup]="form" (ngSubmit)="soumettre()" class="space-y-5">
-    <!-- Informations générales -->
-    <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 space-y-4">
-      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Informations</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <header>
+    <a routerLink="/inspections" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      Inspections
+    </a>
+    <h1 class="page-titre mt-1">Nouvelle inspection</h1>
+    <p class="page-sous-titre">Choisissez le véhicule : la fiche de contrôle adaptée se charge automatiquement.</p>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="soumettre()" class="space-y-5" novalidate>
+
+    <!-- ── Contexte ──────────────────────────────────────────────────── -->
+    <section class="carte divide-y divide-gray-100">
+      <div class="section-form">
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1"
-            >Véhicule / Engin <span class="text-red-500">*</span></label
-          >
-          <select
-            formControlName="vehiculeId"
-            class="form-select w-full rounded-lg border-gray-200 text-sm"
-          >
-            <option value="">Sélectionner...</option>
-            @for (v of vehicules(); track v.id) {
-              <option [value]="v.id">{{ v.marque }} {{ v.modele }} ({{ v.numeroInterne }})</option>
+          <h2 class="section-form-titre">Véhicule et contexte</h2>
+          <p class="section-form-aide">Quel engin, quand, et à quelle occasion.</p>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label for="vehiculeId" class="etiquette">Véhicule ou engin <span class="obligatoire">*</span></label>
+            <select id="vehiculeId" formControlName="vehiculeId" class="champ" [class.champ-erreur]="form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched">
+              <option value="">Sélectionner…</option>
+              @for (v of vehicules(); track v.id) {
+                <option [value]="v.id">{{ v.immatriculation }} — {{ v.marque }} {{ v.modele }} ({{ v.numeroInterne }})</option>
+              }
+            </select>
+            @if (form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched) {
+              <p class="message-erreur">Choisissez le véhicule inspecté.</p>
             }
-          </select>
-          @if (vehiculeSelectionne()) {
-            <p class="mt-1 text-xs text-blue-600">
-              Fiche : {{ vehiculeSelectionne()!.typeVehicule | titlecase }} ·
-              {{ estEnginHeure() ? 'Compteur heures moteur' : 'Compteur km' }}
+            @if (vehiculeSelectionne(); as v) {
+              <p class="mt-1.5 text-xs text-gray-500">
+                {{ v.typeVehicule | titlecase }} · {{ estEnginHeure() ? 'compteur en heures moteur' : 'compteur kilométrique' }} · {{ itemsArray.length }} points à contrôler
+              </p>
+            }
+          </div>
+
+          <fieldset>
+            <legend class="etiquette">Type d’inspection <span class="obligatoire">*</span></legend>
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              @for (t of types; track t.value) {
+                <label class="flex cursor-pointer items-center justify-center rounded-xl px-3 py-2.5 text-center text-sm font-medium ring-1 ring-inset transition-colors"
+                  [ngClass]="form.value.typeInspection === t.value ? 'bg-primary-50 text-primary-800 ring-2 ring-primary-600' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-50'">
+                  <input type="radio" class="sr-only" formControlName="typeInspection" [value]="t.value" />
+                  {{ t.label }}
+                </label>
+              }
+            </div>
+          </fieldset>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="dateInspection" class="etiquette">Date et heure <span class="obligatoire">*</span></label>
+              <input id="dateInspection" type="datetime-local" formControlName="dateInspection" class="champ" />
+            </div>
+            @if (estEnginHeure()) {
+              <div>
+                <label for="heuresMoteurReleve" class="etiquette">Heures moteur relevées</label>
+                <div class="relative">
+                  <input id="heuresMoteurReleve" type="number" min="0" formControlName="heuresMoteurReleve" placeholder="506" class="champ pr-8 tabular-nums" />
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">h</span>
+                </div>
+              </div>
+            } @else {
+              <div>
+                <label for="kilometrageReleve" class="etiquette">Kilométrage relevé</label>
+                <div class="relative">
+                  <input id="kilometrageReleve" type="number" min="0" formControlName="kilometrageReleve" placeholder="27 320" class="champ pr-10 tabular-nums" />
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">km</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Points de contrôle ────────────────────────────────────────── -->
+    <section class="carte">
+      <div class="barre-outils">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-900">Points de contrôle</h2>
+          @if (itemsArray.length) {
+            <p class="mt-0.5 text-xs text-gray-500">
+              <span class="text-green-700">{{ compte('OK') }} conforme(s)</span> ·
+              <span class="text-red-700">{{ compte('KO') }} défaut(s)</span> ·
+              {{ compte('NA') }} N/A
             </p>
           }
         </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1"
-            >Type d'inspection <span class="text-red-500">*</span></label
-          >
-          <select
-            formControlName="typeInspection"
-            class="form-select w-full rounded-lg border-gray-200 text-sm"
-          >
-            @for (t of types; track t.value) {
-              <option [value]="t.value">{{ t.label }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1"
-            >Date & heure <span class="text-red-500">*</span></label
-          >
-          <input
-            type="datetime-local"
-            formControlName="dateInspection"
-            class="form-input w-full rounded-lg border-gray-200 text-sm"
-          />
-        </div>
-
-        @if (estEnginHeure()) {
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1"
-              >Heures moteur relevées</label
-            >
-            <input
-              type="number"
-              formControlName="heuresMoteurReleve"
-              min="0"
-              class="form-input w-full rounded-lg border-gray-200 text-sm"
-              placeholder="ex: 506"
-            />
-          </div>
-        } @else {
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Kilométrage relevé</label>
-            <input
-              type="number"
-              formControlName="kilometrageReleve"
-              min="0"
-              class="form-input w-full rounded-lg border-gray-200 text-sm"
-              placeholder="ex: 27320"
-            />
-          </div>
-        }
-
-        <div class="sm:col-span-2">
-          <label class="block text-xs font-medium text-gray-600 mb-1">Notes générales</label>
-          <textarea
-            formControlName="notes"
-            rows="2"
-            class="form-textarea w-full rounded-lg border-gray-200 text-sm resize-none"
-          ></textarea>
+        <div class="flex gap-2 lg:ml-auto">
+          @if (itemsArray.length) {
+            <button type="button" class="btn-secondaire py-1.5 text-xs" (click)="toutConforme()">Tout conforme</button>
+          }
+          <button type="button" class="btn-action" (click)="ajouterItem()">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Ajouter un point
+          </button>
         </div>
       </div>
-    </div>
 
-    <!-- Points de contrôle -->
-    <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-          Points de contrôle
-        </h2>
-        <button
-          type="button"
-          (click)="ajouterItem()"
-          class="text-xs text-blue-600 hover:text-blue-800 font-medium"
-        >
-          + Ajouter un point
-        </button>
-      </div>
-
-      @if (!vehiculeSelectionne() && itemsArray.length === 0) {
-        <div class="text-center py-8 text-gray-400">
-          <svg
-            class="w-10 h-10 mx-auto mb-2 text-gray-300"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-            />
-          </svg>
-          <p class="text-sm">
-            Sélectionnez un véhicule pour charger la fiche de contrôle correspondante
-          </p>
+      @if (itemsArray.length === 0) {
+        <div class="px-4 py-14 text-center">
+          <svg class="mx-auto h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <p class="mt-2 text-sm text-gray-500">Sélectionnez un véhicule pour charger sa fiche de contrôle.</p>
         </div>
       }
 
-      <div class="space-y-1" formArrayName="items">
-        @for (item of itemsArray.controls; track $index; let i = $index) {
-          <div [formGroupName]="i">
-            <!-- Séparateur de catégorie si nouvelle catégorie -->
-            @if (
-              i === 0 ||
-              item.get('categorie')?.value !== itemsArray.at(i - 1).get('categorie')?.value
-            ) {
-              <div class="mt-3 mb-1 px-1">
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{
-                  item.get('categorie')?.value
-                }}</span>
+      <div formArrayName="items" class="divide-y divide-gray-100">
+        @for (item of itemsArray.controls; track item; let i = $index) {
+          @if (debutCategorie(i)) {
+            <h3 class="bg-gray-50/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500">{{ item.get('categorie')?.value || 'Sans catégorie' }}</h3>
+          }
+          <div [formGroupName]="i" class="px-4 py-3" [ngClass]="item.get('resultat')?.value === 'KO' ? 'bg-red-50/50' : ''">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div class="min-w-0 flex-1">
+                @if (!item.get('categorie')?.value) {
+                  <input type="text" formControlName="categorie" placeholder="Catégorie" aria-label="Catégorie du point"
+                    class="champ mb-1.5 py-1.5 text-xs" [class.champ-erreur]="item.get('categorie')?.invalid && item.get('categorie')?.touched" />
+                }
+                <input type="text" formControlName="libelle" placeholder="Point à contrôler" aria-label="Point à contrôler"
+                  class="w-full rounded-lg border-0 bg-transparent px-2 py-1 text-sm text-gray-900 ring-inset hover:ring-1 hover:ring-gray-200 focus:bg-white focus:ring-2 focus:ring-primary-500"
+                  [class.ring-1]="item.get('libelle')?.invalid && item.get('libelle')?.touched" [class.ring-red-300]="item.get('libelle')?.invalid && item.get('libelle')?.touched" />
               </div>
-            }
-            <div class="grid grid-cols-12 gap-2 items-center bg-gray-50 rounded-lg px-3 py-2">
-              <div class="col-span-5">
-                <input
-                  type="text"
-                  formControlName="libelle"
-                  placeholder="Point à contrôler"
-                  class="form-input w-full rounded-sm border-gray-200 text-xs bg-white"
-                />
-              </div>
-              <div class="col-span-2">
-                <select
-                  formControlName="resultat"
-                  class="form-select w-full rounded-sm border-gray-200 text-xs font-semibold"
-                  [ngClass]="{
-                    'text-green-700 bg-green-50': item.get('resultat')?.value === 'OK',
-                    'text-red-700 bg-red-50': item.get('resultat')?.value === 'KO',
-                    'text-gray-500': item.get('resultat')?.value === 'NA',
-                  }"
-                >
-                  <option value="OK">✓ OUI</option>
-                  <option value="KO">✗ NON</option>
-                  <option value="NA">N/A</option>
-                </select>
-              </div>
-              <div class="col-span-4">
-                <input
-                  type="text"
-                  formControlName="observation"
-                  placeholder="Actions correctives requises"
-                  class="form-input w-full rounded-sm border-gray-200 text-xs"
-                />
-              </div>
-              <div class="col-span-1 flex justify-center">
-                <button
-                  type="button"
-                  (click)="supprimerItem(i)"
-                  class="text-gray-300 hover:text-red-500 transition-colors"
-                >
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+              <div class="flex items-center gap-2">
+                <div class="inline-flex rounded-xl bg-gray-100 p-0.5" role="radiogroup" [attr.aria-label]="'Résultat : ' + item.get('libelle')?.value">
+                  <label class="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold"
+                    [ngClass]="item.get('resultat')?.value === 'OK' ? 'bg-green-600 text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'">
+                    <input type="radio" class="sr-only" formControlName="resultat" value="OK" />Oui
+                  </label>
+                  <label class="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold"
+                    [ngClass]="item.get('resultat')?.value === 'KO' ? 'bg-red-600 text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'">
+                    <input type="radio" class="sr-only" formControlName="resultat" value="KO" />Non
+                  </label>
+                  <label class="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold"
+                    [ngClass]="item.get('resultat')?.value === 'NA' ? 'bg-gray-500 text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'">
+                    <input type="radio" class="sr-only" formControlName="resultat" value="NA" />N/A
+                  </label>
+                </div>
+                <button type="button" (click)="supprimerItem(i)" class="btn-icone-danger" aria-label="Retirer ce point">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               </div>
             </div>
+
+            @if (item.get('resultat')?.value === 'KO' || item.get('observation')?.value || photoDe(item)) {
+              <div class="mt-2 flex items-start gap-2 sm:pl-2">
+                <input type="text" formControlName="observation" placeholder="Défaut constaté, action à prévoir…" aria-label="Observation"
+                  class="champ flex-1 bg-white py-1.5 text-sm" />
+                @if (peutPhoto) {
+                  @if (photoDe(item); as ph) {
+                    <div class="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg ring-1 ring-gray-200">
+                      <img [src]="ph.apercu" alt="" class="h-full w-full object-cover" />
+                      <button type="button" (click)="retirerPhoto(item)" aria-label="Retirer la photo" class="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 hover:opacity-100">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                      </button>
+                    </div>
+                  } @else {
+                    <label class="btn-icone shrink-0 cursor-pointer ring-1 ring-inset ring-gray-200" title="Ajouter une photo">
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                      <span class="sr-only">Ajouter une photo du défaut</span>
+                      <input type="file" class="sr-only" [accept]="typesImages" capture="environment" (change)="choisirPhoto(item, $event)" />
+                    </label>
+                  }
+                }
+              </div>
+            }
           </div>
         }
       </div>
-    </div>
+    </section>
 
-    <!-- Évaluation finale -->
+    <!-- ── Évaluation ────────────────────────────────────────────────── -->
     @if (itemsArray.length > 0) {
-      <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5">
-        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
-          Évaluation finale
-        </h2>
-        <div class="flex items-center gap-4">
-          <div class="flex items-center gap-3">
-            <label class="text-sm font-medium text-gray-700">Note Globale</label>
-            <div class="flex items-center gap-2">
-              <input
-                type="number"
-                formControlName="noteGlobale"
-                min="0"
-                max="20"
-                class="form-input w-20 rounded-lg border-gray-200 text-center text-lg font-bold"
-                placeholder="—"
-              />
-              <span class="text-gray-500 font-semibold">/&nbsp;20</span>
-            </div>
-          </div>
-          @if (form.get('noteGlobale')?.value != null) {
-            <span
-              class="text-xs px-2 py-1 rounded-full font-medium"
-              [ngClass]="{
-                'bg-green-100 text-green-700': (form.get('noteGlobale')?.value ?? 0) >= 16,
-                'bg-yellow-100 text-yellow-700':
-                  (form.get('noteGlobale')?.value ?? 0) >= 12 &&
-                  (form.get('noteGlobale')?.value ?? 0) < 16,
-                'bg-orange-100 text-orange-700':
-                  (form.get('noteGlobale')?.value ?? 0) >= 8 &&
-                  (form.get('noteGlobale')?.value ?? 0) < 12,
-                'bg-red-100 text-red-700': (form.get('noteGlobale')?.value ?? 0) < 8,
-              }"
-            >
-              {{
-                (form.get('noteGlobale')?.value ?? 0) >= 16
-                  ? 'Conforme'
-                  : (form.get('noteGlobale')?.value ?? 0) >= 12
-                    ? 'Satisfaisant'
-                    : (form.get('noteGlobale')?.value ?? 0) >= 8
-                      ? 'À améliorer'
-                      : 'Non conforme'
-              }}
-            </span>
-          }
+      <section class="carte section-form">
+        <div>
+          <h2 class="section-form-titre">Évaluation finale</h2>
+          <p class="section-form-aide">Note sur 20 et remarques générales.</p>
         </div>
-      </div>
+        <div class="space-y-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2">
+              <label for="noteGlobale" class="sr-only">Note globale sur 20</label>
+              <input id="noteGlobale" type="number" min="0" max="20" formControlName="noteGlobale" placeholder="—"
+                class="champ w-20 text-center text-lg font-semibold tabular-nums" [class.champ-erreur]="form.get('noteGlobale')?.invalid" />
+              <span class="text-sm font-medium text-gray-500">/ 20</span>
+            </div>
+            @if (form.value.noteGlobale != null && form.get('noteGlobale')?.valid) {
+              <span class="badge" [ngClass]="noteClasse(form.value.noteGlobale!)">{{ niveauNote(form.value.noteGlobale!) }}</span>
+            }
+            @if (noteProposee() !== null && form.value.noteGlobale !== noteProposee()) {
+              <button type="button" class="text-sm font-medium text-primary-700 hover:text-primary-900" (click)="appliquerNoteProposee()">
+                Proposer {{ noteProposee() }}/20 d’après les points
+              </button>
+            }
+          </div>
+          @if (form.get('noteGlobale')?.invalid) { <p class="message-erreur">La note doit être comprise entre 0 et 20.</p> }
+          <div>
+            <label for="notes" class="etiquette">Remarques</label>
+            <textarea id="notes" formControlName="notes" rows="3" placeholder="État général, consignes au conducteur…" class="champ"></textarea>
+          </div>
+        </div>
+      </section>
     }
 
     @if (erreurServeur()) {
-      <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+      <div class="flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700 ring-1 ring-red-200" role="alert">
+        <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         {{ erreurServeur() }}
       </div>
     }
 
-    <div class="flex items-center justify-end gap-3">
-      <a
-        routerLink="/inspections"
-        class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-      >
-        Annuler
-      </a>
-      <button
-        type="submit"
-        [disabled]="loading()"
-        class="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60"
-      >
-        @if (loading()) {
-          <span
-            class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
-          ></span>
+    <div class="barre-actions justify-between">
+      <p class="hidden text-xs text-gray-500 sm:block">
+        @if (compte('KO')) {
+          <span class="font-medium text-red-700">{{ compte('KO') }} défaut(s)</span> : un signalement de panne sera créé automatiquement.
+        } @else if (itemsArray.length) {
+          Aucun défaut relevé.
         }
-        Enregistrer l'inspection
-      </button>
+      </p>
+      <div class="flex gap-2">
+        <a routerLink="/inspections" class="btn-secondaire">Annuler</a>
+        <button type="submit" [disabled]="loading()" class="btn-primaire">
+          @if (loading()) { <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span> }
+          Enregistrer l’inspection
+        </button>
+      </div>
     </div>
   </form>
 </div>

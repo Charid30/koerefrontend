@@ -1,5 +1,4 @@
 import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { StocksService } from '../../../core/services/stocks.service';
@@ -7,7 +6,7 @@ import { StocksService } from '../../../core/services/stocks.service';
 @Component({
   selector: 'app-piece-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './piece-form.component.html',
 })
@@ -24,12 +23,17 @@ export class PieceFormComponent {
     designation: ['', Validators.required],
     marque: [''],
     categorie: [''],
-    quantiteDisponible: [0],
-    quantiteMinimum: [0],
+    quantiteDisponible: [0, [Validators.min(0)]],
+    quantiteMinimum: [0, [Validators.min(0)]],
     unite: ['unité'],
-    prixUnitaire: [null as number | null],
+    prixUnitaire: [null as number | null, [Validators.min(0)]],
     emplacement: [''],
   });
+
+  touched(field: string): boolean {
+    const c = this.form.get(field);
+    return !!(c?.invalid && c?.touched);
+  }
 
   soumettre() {
     if (this.form.invalid) {
@@ -37,7 +41,10 @@ export class PieceFormComponent {
       return;
     }
     this.loading.set(true);
-    this.svc.createPiece(this.form.value as any).subscribe({
+    this.erreurServeur.set('');
+    const data = { ...this.form.value } as any;
+    if (data.prixUnitaire === null || data.prixUnitaire === '') delete data.prixUnitaire;
+    this.svc.createPiece(data).subscribe({
       next: () => this.router.navigate(['/stocks']),
       error: (err) => {
         this.erreurServeur.set(err?.error?.message ?? 'Erreur lors de la création.');

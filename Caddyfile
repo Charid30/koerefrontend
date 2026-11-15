@@ -11,6 +11,13 @@
 		reverse_proxy api:3000
 	}
 
+	# Application Android (APK) déposée dans deploy/telechargements sur le serveur
+	handle_path /downloads/* {
+		root * /telechargements
+		header *.apk Content-Type application/vnd.android.package-archive
+		file_server
+	}
+
 	# Application Angular : toute route inconnue renvoie index.html
 	handle {
 		root * /srv

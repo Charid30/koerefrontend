@@ -1,317 +1,305 @@
-<div class="p-6 space-y-6">
+<div class="page">
 
   @if (loading()) {
-    <div class="flex items-center justify-center py-20">
-      <div class="w-7 h-7 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+    <div class="space-y-4" aria-busy="true">
+      <div class="flex items-center gap-4">
+        <div class="h-20 w-20 animate-pulse rounded-2xl bg-gray-100"></div>
+        <div class="h-8 w-64 animate-pulse rounded-lg bg-gray-100"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        @for (i of [1, 2, 3, 4]; track i) { <div class="h-20 animate-pulse rounded-2xl bg-gray-100"></div> }
+      </div>
+      <div class="h-72 animate-pulse rounded-2xl bg-gray-100"></div>
     </div>
   }
 
-  @if (vehicule()) {
-    <!-- En-tête -->
-    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-      <div>
-        <div class="flex items-center gap-3">
-          <a routerLink="/vehicules" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-          </a>
-          <h1 class="text-2xl font-bold text-gray-900">
-            {{ vehicule()!.marque }} {{ vehicule()!.modele }}
-          </h1>
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="statutClass(vehicule()!.statut)">
-            {{ statutLabel(vehicule()!.statut) }}
-          </span>
-        </div>
-        <p class="text-sm text-gray-500 mt-1 ml-8">
-          {{ vehicule()!.immatriculation }} · N° {{ vehicule()!.numeroInterne }}
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button (click)="exporterHistorique()"
-          class="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-          </svg>
-          Exporter
-        </button>
-        <a [routerLink]="['/vehicules', vehicule()!.id, 'modifier']"
-          class="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-          </svg>
-          Modifier
-        </a>
-      </div>
-    </div>
-
-    <!-- Onglets -->
-    <div class="border-b border-gray-200">
-      <nav class="flex gap-1 -mb-px">
-        @for (tab of [
-          { id: 'infos', label: 'Informations' },
-          { id: 'inspections', label: 'Inspections' },
-          { id: 'ot', label: 'Ordres de Travail' },
-          { id: 'di', label: 'DI' },
-          { id: 'maintenance', label: 'Maintenance' }
-        ]; track tab.id) {
-          <button (click)="setOnglet($any(tab.id))"
-            class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
-            [class.border-primary-600]="onglet() === tab.id"
-            [class.text-primary-600]="onglet() === tab.id"
-            [class.border-transparent]="onglet() !== tab.id"
-            [class.text-gray-500]="onglet() !== tab.id"
-            [class.hover:text-gray-700]="onglet() !== tab.id">
-            {{ tab.label }}
-            @if (tab.id === 'inspections' && historique()?.inspections?.length) {
-              <span class="ml-1.5 text-xs bg-gray-100 text-gray-600 rounded-full px-1.5 py-0.5">{{ historique()!.inspections.length }}</span>
-            }
-            @if (tab.id === 'ot' && historique()?.ordresTravail?.length) {
-              <span class="ml-1.5 text-xs bg-gray-100 text-gray-600 rounded-full px-1.5 py-0.5">{{ historique()!.ordresTravail.length }}</span>
-            }
-            @if (tab.id === 'di' && historique()?.demandesIntervention?.length) {
-              <span class="ml-1.5 text-xs bg-red-100 text-red-600 rounded-full px-1.5 py-0.5">{{ historique()!.demandesIntervention.length }}</span>
-            }
-          </button>
-        }
-      </nav>
-    </div>
-
-    <!-- Onglet Informations -->
-    @if (onglet() === 'infos') {
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="md:col-span-2 bg-white rounded-xl shadow-xs border border-gray-100 p-5 space-y-4">
-          <h2 class="font-semibold text-gray-800 text-sm uppercase tracking-wide">Informations générales</h2>
-          <div class="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
-            <div>
-              <p class="text-gray-400 text-xs">Type</p>
-              <p class="font-medium text-gray-800">{{ typeLabel(vehicule()!.typeVehicule) }}</p>
-            </div>
-            <div>
-              <p class="text-gray-400 text-xs">Année</p>
-              <p class="font-medium text-gray-800">{{ vehicule()!.annee ?? 'N/R' }}</p>
-            </div>
-            <div>
-              <p class="text-gray-400 text-xs">Carburant</p>
-              <p class="font-medium text-gray-800">{{ vehicule()!.carburant ?? 'N/R' }}</p>
-            </div>
-            <div>
-              <p class="text-gray-400 text-xs">Couleur</p>
-              <p class="font-medium text-gray-800">{{ vehicule()!.couleur ?? 'N/R' }}</p>
-            </div>
-            <div>
-              <p class="text-gray-400 text-xs">N° Série</p>
-              <p class="font-medium text-gray-800 font-mono text-xs">{{ vehicule()!.numeroSerie ?? 'N/R' }}</p>
-            </div>
-            <div>
-              <p class="text-gray-400 text-xs">Département</p>
-              <p class="font-medium text-gray-800">{{ vehicule()!.departement ?? 'N/R' }}</p>
-            </div>
-            <div>
-              <p class="text-gray-400 text-xs">Site géographique</p>
-              <p class="font-medium text-gray-800">{{ vehicule()!.siteGeographique ?? 'N/R' }}</p>
-            </div>
-            <div>
-              <p class="text-gray-400 text-xs">Date acquisition</p>
-              <p class="font-medium text-gray-800">{{ vehicule()!.dateAcquisition | date:'dd/MM/yyyy' }}</p>
-            </div>
-          </div>
-          @if (vehicule()!.notes) {
-            <div class="pt-2 border-t border-gray-100">
-              <p class="text-gray-400 text-xs mb-1">Notes</p>
-              <p class="text-sm text-gray-700">{{ vehicule()!.notes }}</p>
-            </div>
+  @if (vehicule(); as v) {
+    <!-- ── En-tête ─────────────────────────────────────────────────────── -->
+    <header class="page-entete">
+      <div class="flex min-w-0 items-center gap-4">
+        <div class="group relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-primary-50 ring-1 ring-primary-100">
+          @if (v.photoUrl) {
+            <img [src]="urlFichier(v.photoUrl)" alt="Photo du véhicule" class="h-full w-full object-cover" />
+          } @else {
+            <span class="flex h-full w-full items-center justify-center text-primary-600" aria-hidden="true">
+              <svg class="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zm0 0l2-2 2-5H13v7z"/></svg>
+            </span>
+          }
+          @if (peut('vehicule.photo')) {
+            <label class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/45 text-white opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100"
+              [class.opacity-100]="envoiPhoto()" title="Changer la photo">
+              @if (envoiPhoto()) {
+                <span class="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+              } @else {
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              }
+              <span class="sr-only">Changer la photo du véhicule</span>
+              <input type="file" class="sr-only" [accept]="typesImages" [disabled]="envoiPhoto()" (change)="changerPhoto($event)" />
+            </label>
           }
         </div>
-        <div class="space-y-4">
-          <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 text-center">
-            <p class="text-xs text-gray-400 uppercase tracking-wide">Kilométrage</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">{{ vehicule()!.kilometrage | number }}</p>
-            <p class="text-xs text-gray-400">km</p>
+        <div class="min-w-0">
+          <a routerLink="/vehicules" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Parc véhicules
+          </a>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="page-titre truncate">{{ v.immatriculation }}</h1>
+            <span class="badge" [ngClass]="statutClass(v.statut)">
+              <span class="h-1.5 w-1.5 rounded-full" [ngClass]="statutPoint(v.statut)"></span>
+              {{ statutLabel(v.statut) }}
+            </span>
           </div>
-          <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 text-center">
-            <p class="text-xs text-gray-400 uppercase tracking-wide">Heures moteur</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">{{ vehicule()!.heuresMoteur | number }}</p>
-            <p class="text-xs text-gray-400">h</p>
-          </div>
+          <p class="page-sous-titre">{{ v.marque }} {{ v.modele }} · {{ typeLabel(v.typeVehicule) }} · <span class="font-mono">{{ v.numeroInterne }}</span></p>
         </div>
       </div>
-    }
-
-    <!-- Onglet Inspections -->
-    @if (onglet() === 'inspections') {
-      <div class="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
-        @if (!historique()?.inspections?.length) {
-          <p class="text-center py-12 text-gray-400 text-sm">Aucune inspection enregistrée</p>
-        } @else {
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
-              <tr class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                <th class="px-6 py-3">Date</th>
-                <th class="px-6 py-3">Type</th>
-                <th class="px-6 py-3">Statut</th>
-                <th class="px-6 py-3">Note</th>
-                <th class="px-6 py-3">Inspecteur</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-              @for (insp of historique()!.inspections; track insp.id) {
-                <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-3">{{ insp.dateInspection | date:'dd/MM/yyyy' }}</td>
-                  <td class="px-6 py-3 text-gray-600">{{ insp.typeInspection }}</td>
-                  <td class="px-6 py-3">
-                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
-                      [class.bg-green-100]="insp.statut === 'CONFORME'"
-                      [class.text-green-700]="insp.statut === 'CONFORME'"
-                      [class.bg-red-100]="insp.statut === 'NON_CONFORME'"
-                      [class.text-red-700]="insp.statut === 'NON_CONFORME'"
-                      [class.bg-yellow-100]="insp.statut === 'PARTIEL'"
-                      [class.text-yellow-700]="insp.statut === 'PARTIEL'">
-                      {{ insp.statut }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-3 font-semibold">{{ insp.noteGlobale !== null ? (insp.noteGlobale + '/20') : 'N/R' }}</td>
-                  <td class="px-6 py-3 text-gray-600">{{ insp.inspecteur?.nom }} {{ insp.inspecteur?.prenom }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" (click)="exporterHistorique()" class="btn-secondaire">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Exporter l’historique
+        </button>
+        @if (peut('vehicule.modifier')) {
+          <a [routerLink]="['/vehicules', v.id, 'modifier']" class="btn-primaire">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+            Modifier
+          </a>
         }
       </div>
-    }
+    </header>
 
-    <!-- Onglet OT -->
-    @if (onglet() === 'ot') {
-      <div class="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
-        @if (!historique()?.ordresTravail?.length) {
-          <p class="text-center py-12 text-gray-400 text-sm">Aucun ordre de travail</p>
-        } @else {
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
-              <tr class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                <th class="px-6 py-3">N° OT</th>
-                <th class="px-6 py-3">Type</th>
-                <th class="px-6 py-3">Statut</th>
-                <th class="px-6 py-3">Date création</th>
-                <th class="px-6 py-3">Coût total</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-              @for (ot of historique()!.ordresTravail; track ot.id) {
-                <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-3 font-mono font-semibold text-primary-700">
-                    <a [routerLink]="['/ordres-travail', ot.id]" class="hover:underline">{{ ot.numeroOT }}</a>
-                  </td>
-                  <td class="px-6 py-3 text-gray-600">{{ ot.typeMaintenance }}</td>
-                  <td class="px-6 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{{ ot.statut }}</span></td>
-                  <td class="px-6 py-3 text-gray-500">{{ ot.createdAt | date:'dd/MM/yyyy' }}</td>
-                  <td class="px-6 py-3 font-medium">
-                    {{ ((ot.coutPrestataire ?? 0) + (ot.coutPiecesTotal ?? 0)) | number }} DA
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        }
+    <!-- ── Indicateurs ────────────────────────────────────────────────── -->
+    <section class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Indicateurs du véhicule">
+      <div class="stat">
+        <p class="stat-libelle">Kilométrage</p>
+        <p class="stat-valeur tabular-nums">{{ v.kilometrage | number: '1.0-0' : 'fr' }} <span class="text-base font-normal text-gray-400">km</span></p>
       </div>
-    }
-
-    <!-- Onglet DI -->
-    @if (onglet() === 'di') {
-      <div class="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
-        @if (!historique()?.demandesIntervention?.length) {
-          <p class="text-center py-12 text-gray-400 text-sm">Aucune signalisation de panne</p>
-        } @else {
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
-              <tr class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                <th class="px-6 py-3">N° DI</th>
-                <th class="px-6 py-3">Date</th>
-                <th class="px-6 py-3">Priorité</th>
-                <th class="px-6 py-3">Statut</th>
-                <th class="px-6 py-3">Déclarant</th>
-                <th class="px-6 py-3">Description</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-              @for (di of historique()!.demandesIntervention; track di.id) {
-                <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-3 font-mono font-semibold text-orange-700">{{ di.numeroDI }}</td>
-                  <td class="px-6 py-3 text-gray-500">{{ di.dateSignalement | date:'dd/MM/yyyy' }}</td>
-                  <td class="px-6 py-3">
-                    <span class="text-xs px-2 py-0.5 rounded-full"
-                      [class.bg-red-100]="di.priorite === 'CRITIQUE'"
-                      [class.text-red-700]="di.priorite === 'CRITIQUE'"
-                      [class.bg-orange-100]="di.priorite === 'URGENTE'"
-                      [class.text-orange-700]="di.priorite === 'URGENTE'"
-                      [class.bg-blue-100]="di.priorite === 'NORMALE'"
-                      [class.text-blue-700]="di.priorite === 'NORMALE'"
-                      [class.bg-gray-100]="di.priorite === 'FAIBLE'"
-                      [class.text-gray-600]="di.priorite === 'FAIBLE'">
-                      {{ di.priorite }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ di.statut }}</span></td>
-                  <td class="px-6 py-3 text-gray-600">{{ di.declarant?.nom }} {{ di.declarant?.prenom }}</td>
-                  <td class="px-6 py-3 text-gray-700 max-w-xs truncate">{{ di.description }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        }
+      <div class="stat">
+        <p class="stat-libelle">Heures moteur</p>
+        <p class="stat-valeur tabular-nums">{{ v.heuresMoteur | number: '1.0-0' : 'fr' }} <span class="text-base font-normal text-gray-400">h</span></p>
       </div>
-    }
-
-    <!-- Onglet Maintenance -->
-    @if (onglet() === 'maintenance') {
-      <div class="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
-        @if (!historique()?.plansMaintenances?.length) {
-          <p class="text-center py-12 text-gray-400 text-sm">Aucun plan de maintenance actif</p>
-        } @else {
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
-              <tr class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                <th class="px-6 py-3">Opération</th>
-                <th class="px-6 py-3">Fréquence</th>
-                <th class="px-6 py-3">Dernière exécution</th>
-                <th class="px-6 py-3">Prochaine échéance</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-              @for (plan of historique()!.plansMaintenances; track plan.id) {
-                <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-3 font-medium text-gray-900">{{ plan.typeOperation }}</td>
-                  <td class="px-6 py-3 text-gray-600">
-                    @if (plan.frequenceKm) { {{ plan.frequenceKm | number }} km · }
-                    @if (plan.frequenceHeures) { {{ plan.frequenceHeures | number }} h · }
-                    @if (plan.frequenceJours) { {{ plan.frequenceJours }} j }
-                  </td>
-                  <td class="px-6 py-3 text-gray-500">
-                    @if (plan.derniereExecutionDate) { {{ plan.derniereExecutionDate | date:'dd/MM/yyyy' }} }
-                    @else { N/R }
-                  </td>
-                  <td class="px-6 py-3 font-medium"
-                    [class.text-red-600]="plan.prochaineExecutionDate && (plan.prochaineExecutionDate | date:'yyyy-MM-dd')! <= (today | date:'yyyy-MM-dd')!"
-                    [class.text-gray-800]="!plan.prochaineExecutionDate || (plan.prochaineExecutionDate | date:'yyyy-MM-dd')! > (today | date:'yyyy-MM-dd')!">
-                    @if (plan.prochaineExecutionDate) { {{ plan.prochaineExecutionDate | date:'dd/MM/yyyy' }} }
-                    @else { N/R }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        }
+      <div class="stat">
+        <p class="stat-libelle">OT en cours</p>
+        <p class="stat-valeur tabular-nums">{{ otOuverts() }}</p>
       </div>
-    }
+      <div class="stat">
+        <p class="stat-libelle">Coût de maintenance</p>
+        <p class="stat-valeur tabular-nums">{{ coutMaintenance() | number: '1.0-0' : 'fr' }} <span class="text-base font-normal text-gray-400">FCFA</span></p>
+      </div>
+    </section>
 
+    <div class="grid gap-5 lg:grid-cols-3">
+      <!-- ── Historique ─────────────────────────────────────────────── -->
+      <section class="carte min-w-0 lg:col-span-2">
+        <nav class="flex gap-1 overflow-x-auto border-b border-gray-100 px-3 [scrollbar-width:none]" role="tablist" aria-label="Historique du véhicule">
+          @for (t of onglets(); track t.id) {
+            <button type="button" role="tab" [attr.aria-selected]="onglet() === t.id" (click)="onglet.set(t.id)"
+              class="-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-medium"
+              [ngClass]="onglet() === t.id ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-800'">
+              {{ t.label }}
+              @if (t.n) {
+                <span class="rounded-full bg-gray-100 px-1.5 text-xs tabular-nums text-gray-600">{{ t.n }}</span>
+              }
+            </button>
+          }
+        </nav>
+
+        @if (!historique()) {
+          <div class="space-y-3 p-5" aria-busy="true">
+            @for (i of [1, 2, 3]; track i) { <div class="h-12 animate-pulse rounded-xl bg-gray-100"></div> }
+          </div>
+        } @else {
+          @switch (onglet()) {
+            @case ('activite') {
+              @if (evenements().length === 0) {
+                <p class="px-5 py-14 text-center text-sm text-gray-500">Aucune activité enregistrée pour ce véhicule.</p>
+              } @else {
+                <ol class="relative px-5 py-5">
+                  @for (e of evenements(); track $index; let dernier = $last) {
+                    <li class="relative flex gap-4 pb-6" [class.pb-0]="dernier">
+                      @if (!dernier) {
+                        <span class="absolute left-4 top-9 -ml-px h-[calc(100%-2.25rem)] w-0.5 bg-gray-100" aria-hidden="true"></span>
+                      }
+                      <span class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-4 ring-white"
+                        [ngClass]="e.genre === 'ot' ? 'bg-primary-100 text-primary-700' : e.genre === 'di' ? 'bg-orange-100 text-orange-700' : 'bg-teal-100 text-teal-700'" aria-hidden="true">
+                        @if (e.genre === 'ot') {
+                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085"/></svg>
+                        } @else if (e.genre === 'di') {
+                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                        } @else {
+                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        }
+                      </span>
+                      <div class="min-w-0 flex-1 pt-1">
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          @if (e.lien) {
+                            <a [routerLink]="e.lien" class="text-sm font-medium text-gray-900 hover:text-primary-700">{{ e.titre }}</a>
+                          } @else {
+                            <p class="text-sm font-medium text-gray-900">{{ e.titre }}</p>
+                          }
+                          <span class="badge" [ngClass]="e.badgeClasse">{{ e.badge }}</span>
+                        </div>
+                        @if (e.detail) {
+                          <p class="mt-0.5 line-clamp-2 text-sm text-gray-500">{{ e.detail }}</p>
+                        }
+                        <time class="mt-1 block text-xs text-gray-400" [attr.datetime]="e.date">{{ e.date | date: 'd MMM yyyy' : '' : 'fr' }}</time>
+                      </div>
+                    </li>
+                  }
+                </ol>
+              }
+            }
+
+            @case ('ot') {
+              @if (!historique().ordresTravail?.length) {
+                <p class="px-5 py-14 text-center text-sm text-gray-500">Aucun ordre de travail.</p>
+              } @else {
+                <table class="tableau">
+                  <thead class="hidden sm:table-header-group">
+                    <tr><th scope="col">OT</th><th scope="col">Statut</th><th scope="col" class="text-right">Coût</th></tr>
+                  </thead>
+                  <tbody>
+                    @for (o of historique().ordresTravail; track o.id) {
+                      <tr>
+                        <td>
+                          <a [routerLink]="['/ordres-travail', o.id]" class="font-mono font-semibold text-primary-700 hover:underline">{{ o.numeroOT }}</a>
+                          <p class="truncate text-xs text-gray-500">{{ o.typeMaintenance === 'PREVENTIVE' ? 'Préventive' : 'Corrective' }} · {{ o.createdAt | date: 'dd/MM/yyyy' }}</p>
+                        </td>
+                        <td><span class="badge" [ngClass]="otStatutClass(o.statut)">{{ otStatutLabel(o.statut) }}</span></td>
+                        <td class="hidden whitespace-nowrap text-right tabular-nums text-gray-700 sm:table-cell">{{ (+(o.coutPrestataire ?? 0) + +(o.coutPiecesTotal ?? 0)) | number: '1.0-0' : 'fr' }} FCFA</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            }
+
+            @case ('di') {
+              @if (!historique().demandesIntervention?.length) {
+                <p class="px-5 py-14 text-center text-sm text-gray-500">Aucune panne signalée.</p>
+              } @else {
+                <ul class="divide-y divide-gray-100">
+                  @for (d of historique().demandesIntervention; track d.id) {
+                    <li class="px-5 py-3.5">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="font-mono text-xs font-semibold text-gray-700">{{ d.numeroDI }}</span>
+                        <span class="badge" [ngClass]="diPrioriteClass(d.priorite)">{{ diPrioriteLabel(d.priorite) }}</span>
+                        <span class="badge" [ngClass]="diStatutClass(d.statut)">{{ diStatutLabel(d.statut) }}</span>
+                        <span class="ml-auto text-xs text-gray-400">{{ d.dateSignalement | date: 'dd/MM/yyyy' }}</span>
+                      </div>
+                      <p class="mt-1 text-sm text-gray-700">{{ d.description }}</p>
+                      @if (d.declarant) {
+                        <p class="mt-0.5 text-xs text-gray-500">Signalé par {{ d.declarant.prenom }} {{ d.declarant.nom }}</p>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            }
+
+            @case ('inspections') {
+              @if (!historique().inspections?.length) {
+                <p class="px-5 py-14 text-center text-sm text-gray-500">Aucune inspection enregistrée.</p>
+              } @else {
+                <table class="tableau">
+                  <thead class="hidden sm:table-header-group">
+                    <tr><th scope="col">Inspection</th><th scope="col">Résultat</th><th scope="col" class="text-right">Note</th></tr>
+                  </thead>
+                  <tbody>
+                    @for (i of historique().inspections; track i.id) {
+                      <tr>
+                        <td>
+                          <a [routerLink]="['/inspections', i.id]" class="font-medium text-gray-900 hover:text-primary-700">{{ inspTypeLabel(i.typeInspection) }}</a>
+                          <p class="truncate text-xs text-gray-500">{{ i.dateInspection | date: 'dd/MM/yyyy' }}@if (i.inspecteur) { · {{ i.inspecteur.prenom }} {{ i.inspecteur.nom }} }</p>
+                        </td>
+                        <td><span class="badge" [ngClass]="inspStatutClass(i.statut)">{{ inspStatutLabel(i.statut) }}</span></td>
+                        <td class="hidden text-right font-semibold tabular-nums sm:table-cell">{{ i.noteGlobale != null ? i.noteGlobale + '/20' : '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            }
+
+            @case ('maintenance') {
+              @if (!historique().plansMaintenances?.length) {
+                <p class="px-5 py-14 text-center text-sm text-gray-500">Aucun plan de maintenance préventive actif.</p>
+              } @else {
+                <ul class="divide-y divide-gray-100">
+                  @for (p of historique().plansMaintenances; track p.id) {
+                    <li class="flex items-center justify-between gap-4 px-5 py-3.5">
+                      <div class="min-w-0">
+                        <p class="font-medium text-gray-900">{{ p.typeOperation }}</p>
+                        <p class="text-xs text-gray-500">
+                          Tous les
+                          @if (p.frequenceKm) { {{ p.frequenceKm | number: '1.0-0' : 'fr' }} km }
+                          @if (p.frequenceKm && (p.frequenceHeures || p.frequenceJours)) { · }
+                          @if (p.frequenceHeures) { {{ p.frequenceHeures | number: '1.0-0' : 'fr' }} h }
+                          @if (p.frequenceHeures && p.frequenceJours) { · }
+                          @if (p.frequenceJours) { {{ p.frequenceJours }} jours }
+                          @if (p.derniereExecutionDate) { — fait le {{ p.derniereExecutionDate | date: 'dd/MM/yyyy' }} }
+                        </p>
+                      </div>
+                      <div class="shrink-0 text-right">
+                        <p class="text-xs text-gray-500">Prochaine</p>
+                        <p class="text-sm font-medium" [ngClass]="enRetard(p.prochaineExecutionDate) ? 'text-red-600' : 'text-gray-900'">
+                          {{ p.prochaineExecutionDate ? (p.prochaineExecutionDate | date: 'dd/MM/yyyy') : '—' }}
+                        </p>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            }
+          }
+        }
+      </section>
+
+      <!-- ── Fiche technique ────────────────────────────────────────── -->
+      <aside class="space-y-5">
+        @if (prochaineEcheance(); as p) {
+          <section class="rounded-2xl p-5 ring-1" [ngClass]="enRetard(p.prochaineExecutionDate) ? 'bg-red-50 ring-red-200' : 'bg-primary-50 ring-primary-100'">
+            <p class="text-xs font-medium" [ngClass]="enRetard(p.prochaineExecutionDate) ? 'text-red-700' : 'text-primary-700'">
+              {{ enRetard(p.prochaineExecutionDate) ? 'Entretien en retard' : 'Prochain entretien' }}
+            </p>
+            <p class="mt-1 font-semibold text-gray-900">{{ p.typeOperation }}</p>
+            <p class="text-sm text-gray-600">{{ p.prochaineExecutionDate | date: 'EEEE d MMMM yyyy' : '' : 'fr' }}</p>
+          </section>
+        }
+
+        <section class="carte p-5">
+          <h2 class="text-sm font-semibold text-gray-900">Fiche technique</h2>
+          <dl class="mt-3 space-y-2.5 text-sm">
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Marque / modèle</dt><dd class="text-right font-medium text-gray-900">{{ v.marque }} {{ v.modele }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Type</dt><dd class="text-right font-medium text-gray-900">{{ typeLabel(v.typeVehicule) }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Année</dt><dd class="font-medium text-gray-900">{{ v.annee ?? '—' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Carburant</dt><dd class="font-medium text-gray-900">{{ carburantLabel(v.carburant) }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Couleur</dt><dd class="font-medium text-gray-900">{{ v.couleur || '—' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">N° de série</dt><dd class="truncate font-mono text-xs font-medium text-gray-900">{{ v.numeroSerie || '—' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Acquis le</dt><dd class="font-medium text-gray-900">{{ v.dateAcquisition ? (v.dateAcquisition | date: 'dd/MM/yyyy') : '—' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Mis en service</dt><dd class="font-medium text-gray-900">{{ v.dateMiseEnService ? (v.dateMiseEnService | date: 'dd/MM/yyyy') : '—' }}</dd></div>
+          </dl>
+        </section>
+
+        <section class="carte p-5">
+          <h2 class="text-sm font-semibold text-gray-900">Affectation</h2>
+          <dl class="mt-3 space-y-2.5 text-sm">
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Entité</dt><dd class="text-right font-medium text-gray-900">{{ v.entite || '—' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Département</dt><dd class="text-right font-medium text-gray-900">{{ v.departement || '—' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Site</dt><dd class="text-right font-medium text-gray-900">{{ v.siteGeographique || '—' }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-gray-500">Conducteur</dt><dd class="text-right font-medium text-gray-900">{{ v.conducteurHabituel ? v.conducteurHabituel.prenom + ' ' + v.conducteurHabituel.nom : '—' }}</dd></div>
+          </dl>
+          @if (v.notes) {
+            <p class="mt-4 whitespace-pre-line border-t border-gray-100 pt-3 text-sm text-gray-600">{{ v.notes }}</p>
+          }
+        </section>
+      </aside>
+    </div>
   }
 
   @if (!loading() && !vehicule()) {
-    <div class="text-center py-20">
-      <p class="text-gray-400">Véhicule introuvable.</p>
-      <a routerLink="/vehicules" class="text-primary-600 text-sm hover:underline mt-2 block">Retour à la liste</a>
+    <div class="carte px-4 py-16 text-center">
+      <p class="text-sm font-medium text-gray-900">Véhicule introuvable</p>
+      <a routerLink="/vehicules" class="mt-2 inline-block text-sm font-medium text-primary-600 hover:text-primary-800">Retour à la liste</a>
     </div>
   }
-
 </div>

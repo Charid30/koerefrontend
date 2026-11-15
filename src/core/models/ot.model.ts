@@ -26,6 +26,17 @@ export interface OrdreTravail {
   vehicule?: { numeroInterne: string; marque: string; modele: string; immatriculation: string; numeroSerie?: string };
   responsable?: { nom: string; prenom: string };
   mecaniciens?: OtMecanicien[];
+  photos?: OtPhoto[];
+  diId?: number | null;
+  demandeIntervention?: { id: number; numeroDI: string; description: string; priorite: Priorite } | null;
+  updatedAt?: string;
+}
+
+export interface OtPhoto {
+  id: number;
+  url: string;
+  type: 'AVANT' | 'APRES' | 'PIECE';
+  createdAt: string;
 }
 
 export interface OtMecanicien {
@@ -34,7 +45,7 @@ export interface OtMecanicien {
   tempsPasse?: number;
   diagnostic?: string;
   travauxEffectues?: string;
-  mecanicien?: { nom: string; prenom: string };
+  mecanicien?: { id?: number; nom: string; prenom: string };
 }
 
 export interface DemandeIntervention {
@@ -47,6 +58,7 @@ export interface DemandeIntervention {
   statut: StatutDI;
   localisation?: string;
   dateSignalement: string;
+  photos?: { id: number; url: string; createdAt: string }[];
   vehicule?: { numeroInterne: string; marque: string; modele: string; numeroSerie?: string };
   declarant?: { nom: string; prenom: string };
 }

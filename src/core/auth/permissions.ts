@@ -23,6 +23,16 @@ export const PERMISSIONS = {
   'ot.modifier': ['ADMIN', 'RESPONSABLE_MAINTENANCE'],
   'ot.supprimer': ['ADMIN', 'RESPONSABLE_MAINTENANCE'],
   'ot.statut': ['ADMIN', 'RESPONSABLE_MAINTENANCE', 'MECANICIEN'],
+  'ot.affecter': ['ADMIN', 'RESPONSABLE_MAINTENANCE'],
+  'ot.couts': ['ADMIN', 'RESPONSABLE_MAINTENANCE', 'RESPONSABLE_PARC'],
+  'ot.travaux': ['ADMIN', 'RESPONSABLE_MAINTENANCE', 'MECANICIEN'],
+  // upload.controller.ts
+  'ot.photo': ['ADMIN', 'RESPONSABLE_MAINTENANCE', 'MECANICIEN'],
+  'ot.photo.supprimer': ['ADMIN', 'RESPONSABLE_MAINTENANCE'],
+  'di.photo': ['ADMIN', 'RESPONSABLE_PARC', 'RESPONSABLE_MAINTENANCE', 'MECANICIEN', 'CHAUFFEUR'],
+  'di.photo.supprimer': ['ADMIN', 'RESPONSABLE_PARC', 'RESPONSABLE_MAINTENANCE'],
+  'inspection.photo': ['ADMIN', 'RESPONSABLE_MAINTENANCE', 'MECANICIEN', 'CHAUFFEUR'],
+  'vehicule.photo': ['ADMIN', 'RESPONSABLE_PARC'],
   // maintenance-preventive.controller.ts
   'maintenance.creer': ['ADMIN', 'RESPONSABLE_MAINTENANCE', 'RESPONSABLE_PARC'],
   'maintenance.executer': ['ADMIN', 'RESPONSABLE_MAINTENANCE', 'MECANICIEN'],

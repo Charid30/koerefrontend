@@ -12,6 +12,16 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="SOFARY">
   <link rel="apple-touch-icon" href="icon-192x192.png">
+  <script>
+    // Applique le thème avant l'affichage pour éviter un flash blanc en mode sombre
+    (function () {
+      try {
+        var t = localStorage.getItem('sofary_theme') || 'systeme';
+        var sombre = t === 'sombre' || (t === 'systeme' && matchMedia('(prefers-color-scheme: dark)').matches);
+        if (sombre) { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

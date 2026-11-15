@@ -1,5 +1,4 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -7,7 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './login.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./login.component.css'],
@@ -20,6 +19,12 @@ export class LoginComponent {
   loading = signal(false);
   error = signal<string | null>(null);
   showPassword = signal(false);
+  majusculesActives = signal(false);
+  readonly annee = new Date().getFullYear();
+
+  verifierMaj(e: KeyboardEvent) {
+    this.majusculesActives.set(!!e.getModifierState?.('CapsLock'));
+  }
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -27,7 +32,11 @@ export class LoginComponent {
   });
 
   submit() {
-    if (this.form.invalid || this.loading()) return;
+    if (this.loading()) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.error.set(null);
     this.loading.set(true);

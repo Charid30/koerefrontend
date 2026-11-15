@@ -34,15 +34,32 @@ export const OT_STATUT_POINTS: Record<string, string> = {
   ANNULE:                  'bg-red-500',
 };
 
-// Machine à états — transitions autorisées
+// Machine à états : copie exacte des transitions acceptées par l'API
+// (ordres-travail.service.ts) — un bouton hors de cette liste renverrait une erreur 400.
 export const OT_TRANSITIONS: Record<string, string[]> = {
   EN_ATTENTE_VALIDATION:  ['PLANIFIE', 'ANNULE'],
   PLANIFIE:               ['EN_COURS', 'ANNULE'],
   EN_COURS:               ['EN_ATTENTE_PIECES', 'EN_ATTENTE_PRESTATAIRE', 'TERMINE'],
-  EN_ATTENTE_PIECES:      ['EN_COURS', 'ANNULE'],
-  EN_ATTENTE_PRESTATAIRE: ['EN_COURS', 'ANNULE'],
+  EN_ATTENTE_PIECES:      ['EN_COURS'],
+  EN_ATTENTE_PRESTATAIRE: ['EN_COURS', 'TERMINE'],
   TERMINE:                ['CONTROLE'],
-  CONTROLE:               ['CLOTURE', 'EN_COURS'],
+  CONTROLE:               ['CLOTURE'],
   CLOTURE:                [],
   ANNULE:                 [],
 };
+
+/** Étapes principales du cycle de vie, pour le suivi visuel de la fiche OT */
+export const OT_ETAPES = [
+  { statut: 'EN_ATTENTE_VALIDATION', label: 'Validation' },
+  { statut: 'PLANIFIE', label: 'Planifié' },
+  { statut: 'EN_COURS', label: 'En cours' },
+  { statut: 'TERMINE', label: 'Terminé' },
+  { statut: 'CONTROLE', label: 'Contrôle' },
+  { statut: 'CLOTURE', label: 'Clôturé' },
+];
+
+/** Position d'un statut dans les étapes (les attentes comptent comme « En cours ») */
+export function indexEtape(statut: string): number {
+  if (statut === 'EN_ATTENTE_PIECES' || statut === 'EN_ATTENTE_PRESTATAIRE') return 2;
+  return OT_ETAPES.findIndex((e) => e.statut === statut);
+}

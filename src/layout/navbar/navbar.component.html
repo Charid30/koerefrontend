@@ -1,76 +1,69 @@
-<header class="h-14 bg-white border-b border-gray-200 flex items-center px-3 sm:px-6 gap-3">
+<header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-gray-200/70 bg-white/80 px-3 backdrop-blur sm:px-6">
 
-  <!-- Hamburger mobile -->
-  <button
-    (click)="layout.toggle()"
-    class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-primary-600 transition-colors shrink-0"
-    aria-label="Ouvrir le menu">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-    </svg>
+  <button type="button" (click)="layout.toggle()" class="btn-icone lg:hidden" aria-label="Ouvrir le menu" [attr.aria-expanded]="layout.mobileOpen()">
+    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
   </button>
 
-  <!-- Titre -->
-  <div class="flex-1 min-w-0">
-    <h1 class="text-sm font-semibold text-gray-800 truncate">
-      <span class="hidden sm:inline">SOFARY <span class="text-gray-300 font-light">·</span> </span>Gestion de Flotte
-    </h1>
-  </div>
+  <p class="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900 sm:text-base">{{ titre() }}</p>
+
+  <!-- Thème -->
+  <button type="button" (click)="theme.basculer()" class="btn-icone" [attr.aria-label]="theme.sombre() ? 'Passer en mode clair' : 'Passer en mode sombre'" [attr.title]="theme.sombre() ? 'Mode clair' : 'Mode sombre'">
+    @if (theme.sombre()) {
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    } @else {
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+    }
+  </button>
 
   <!-- Notifications -->
-  <a routerLink="/notifications" class="relative p-2 text-gray-500 hover:text-primary-600 rounded-lg hover:bg-gray-100 shrink-0">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-    </svg>
+  <a routerLink="/notifications" class="btn-icone relative" [attr.aria-label]="nonLues() ? nonLues() + ' notification(s) non lue(s)' : 'Notifications'">
+    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+    @if (nonLues()) {
+      <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-red px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-white">
+        {{ nonLues() > 99 ? '99+' : nonLues() }}
+      </span>
+    }
   </a>
 
-  <!-- Avatar + dropdown -->
-  <div class="relative shrink-0" data-profil-menu>
-    <button (click)="toggleMenu()"
-      class="flex items-center gap-2 p-1 rounded-xl hover:bg-gray-100 transition-colors">
-      <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-        <span class="text-white text-xs font-bold">
-          {{ user()?.prenom?.[0] }}{{ user()?.nom?.[0] }}
-        </span>
-      </div>
-      <span class="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] truncate">
-        {{ user()?.prenom }} {{ user()?.nom }}
-      </span>
-      <svg class="hidden sm:block w-3.5 h-3.5 text-gray-400 transition-transform"
-        [class.rotate-180]="menuOuvert()"
-        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-      </svg>
+  <!-- Compte -->
+  <div class="relative ml-1" data-profil-menu>
+    <button type="button" (click)="toggleMenu()" class="flex items-center gap-2 rounded-xl p-1 hover:bg-gray-100" [attr.aria-expanded]="menuOuvert()" aria-haspopup="menu" aria-label="Menu du compte">
+      <span class="flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-white">{{ initiales() }}</span>
+      <span class="hidden max-w-[10rem] truncate text-sm font-medium text-gray-700 sm:block">{{ user()?.prenom }}</span>
+      <svg class="hidden h-3.5 w-3.5 text-gray-400 transition-transform sm:block" [class.rotate-180]="menuOuvert()" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
     </button>
 
     @if (menuOuvert()) {
-      <div class="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-1.5 z-50">
-        <!-- Info user -->
-        <div class="px-4 py-2.5 border-b border-gray-100">
-          <p class="text-xs font-semibold text-gray-800 truncate">{{ user()?.prenom }} {{ user()?.nom }}</p>
-          <p class="text-xs text-gray-400 truncate">{{ user()?.email }}</p>
+      <div class="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-2xl bg-white py-1.5 shadow-xl ring-1 ring-gray-200/70" role="menu">
+        <div class="border-b border-gray-100 px-4 py-3">
+          <p class="truncate text-sm font-semibold text-gray-900">{{ user()?.prenom }} {{ user()?.nom }}</p>
+          <p class="truncate text-xs text-gray-500">{{ user()?.email }}</p>
         </div>
-        <!-- Mon profil -->
-        <a routerLink="/profil" (click)="menuOuvert.set(false)"
-          class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-          </svg>
+        <a routerLink="/profil" role="menuitem" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+          <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
           Mon profil
         </a>
-        <!-- Séparateur -->
-        <div class="border-t border-gray-100 my-1"></div>
-        <!-- Déconnexion -->
-        <button (click)="deconnecter()"
-          class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-          </svg>
+        <a routerLink="/application-mobile" role="menuitem" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+          <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          Application mobile
+        </a>
+        <div class="px-4 py-2.5">
+          <p class="mb-1.5 text-xs font-medium text-gray-500">Apparence</p>
+          <div class="grid grid-cols-3 gap-1 rounded-xl bg-gray-100 p-0.5 text-xs font-medium" role="radiogroup" aria-label="Apparence">
+            @for (t of [{ v: 'clair', l: 'Clair' }, { v: 'sombre', l: 'Sombre' }, { v: 'systeme', l: 'Auto' }]; track t.v) {
+              <button type="button" role="radio" [attr.aria-checked]="theme.choix() === t.v" (click)="theme.choix.set($any(t.v))"
+                class="rounded-lg py-1.5" [class]="theme.choix() === t.v ? 'rounded-lg py-1.5 bg-white text-gray-900 shadow-xs' : 'rounded-lg py-1.5 text-gray-500 hover:text-gray-800'">
+                {{ t.l }}
+              </button>
+            }
+          </div>
+        </div>
+        <div class="my-1 border-t border-gray-100"></div>
+        <button type="button" (click)="deconnecter()" role="menuitem" class="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
           Déconnexion
         </button>
       </div>
     }
   </div>
-
 </header>

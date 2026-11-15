@@ -78,6 +78,16 @@
   .tableau tbody td:first-child { @apply w-full max-w-0; }
   .pied-liste { @apply flex items-center justify-between border-t border-gray-100 px-4 py-3 text-xs text-gray-500; }
 
+  /* Formulaires pleine page */
+  .etiquette { @apply mb-1.5 block text-sm font-medium text-gray-700; }
+  .obligatoire { @apply text-red-600; }
+  .champ-erreur { @apply bg-red-50/40 ring-red-300 focus:ring-red-500; }
+  .message-erreur { @apply mt-1 text-xs text-red-600; }
+  .section-form { @apply grid gap-x-6 gap-y-5 p-5 sm:p-6 lg:grid-cols-[14rem_1fr]; }
+  .section-form-titre { @apply text-sm font-semibold text-gray-900; }
+  .section-form-aide { @apply mt-1 text-sm text-gray-500; }
+  .barre-actions { @apply sticky bottom-0 z-10 -mx-4 flex items-center justify-end gap-2 border-t border-gray-200/70 bg-white/85 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:shadow-lg; }
+
   .badge { @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset; }
   /* Actions de ligne : visibles au survol sur ordinateur, toujours sur mobile */
   .actions-survol { @apply flex items-center justify-end gap-0.5 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100; }
@@ -91,3 +101,126 @@
 
 /* Transitions globales */
 * { transition-property: color, background-color, border-color; transition-duration: 150ms; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Mode sombre
+   Activé par la classe « dark » sur <html> (ThemeService).
+   Plutôt que d'ajouter des variantes dark: partout, on redéfinit les
+   couleurs de base : gris inversés, blanc = surface sombre, teintes pâles
+   transformées en voiles colorés, textes colorés éclaircis.
+   ════════════════════════════════════════════════════════════════════════ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+html.dark {
+  /* Neutres légèrement violets, assortis à la marque */
+  --color-white: #17121f;
+  --color-gray-50: #0f0b16;
+  --color-gray-100: #211b2c;
+  --color-gray-200: #2f2739;
+  --color-gray-300: #463d55;
+  --color-gray-400: #7a7190;
+  --color-gray-500: #9c94af;
+  --color-gray-600: #b9b2c9;
+  --color-gray-700: #d3cee0;
+  --color-gray-800: #e5e1ed;
+  --color-gray-900: #f2f0f6;
+  --color-gray-950: #faf9fc;
+  --color-red-50: color-mix(in oklab, var(--color-red-500) 12%, transparent);
+  --color-red-100: color-mix(in oklab, var(--color-red-500) 20%, transparent);
+  --color-red-200: color-mix(in oklab, var(--color-red-500) 32%, transparent);
+  --color-green-50: color-mix(in oklab, var(--color-green-500) 12%, transparent);
+  --color-green-100: color-mix(in oklab, var(--color-green-500) 20%, transparent);
+  --color-green-200: color-mix(in oklab, var(--color-green-500) 32%, transparent);
+  --color-amber-50: color-mix(in oklab, var(--color-amber-500) 12%, transparent);
+  --color-amber-100: color-mix(in oklab, var(--color-amber-500) 20%, transparent);
+  --color-amber-200: color-mix(in oklab, var(--color-amber-500) 32%, transparent);
+  --color-orange-50: color-mix(in oklab, var(--color-orange-500) 12%, transparent);
+  --color-orange-100: color-mix(in oklab, var(--color-orange-500) 20%, transparent);
+  --color-orange-200: color-mix(in oklab, var(--color-orange-500) 32%, transparent);
+  --color-blue-50: color-mix(in oklab, var(--color-blue-500) 12%, transparent);
+  --color-blue-100: color-mix(in oklab, var(--color-blue-500) 20%, transparent);
+  --color-blue-200: color-mix(in oklab, var(--color-blue-500) 32%, transparent);
+  --color-teal-50: color-mix(in oklab, var(--color-teal-500) 12%, transparent);
+  --color-teal-100: color-mix(in oklab, var(--color-teal-500) 20%, transparent);
+  --color-teal-200: color-mix(in oklab, var(--color-teal-500) 32%, transparent);
+  --color-lime-50: color-mix(in oklab, var(--color-lime-500) 12%, transparent);
+  --color-lime-100: color-mix(in oklab, var(--color-lime-500) 20%, transparent);
+  --color-lime-200: color-mix(in oklab, var(--color-lime-500) 32%, transparent);
+  --color-yellow-50: color-mix(in oklab, var(--color-yellow-500) 12%, transparent);
+  --color-yellow-100: color-mix(in oklab, var(--color-yellow-500) 20%, transparent);
+  --color-yellow-200: color-mix(in oklab, var(--color-yellow-500) 32%, transparent);
+  --color-sky-50: color-mix(in oklab, var(--color-sky-500) 12%, transparent);
+  --color-sky-100: color-mix(in oklab, var(--color-sky-500) 20%, transparent);
+  --color-sky-200: color-mix(in oklab, var(--color-sky-500) 32%, transparent);
+  --color-fuchsia-50: color-mix(in oklab, var(--color-fuchsia-500) 12%, transparent);
+  --color-fuchsia-100: color-mix(in oklab, var(--color-fuchsia-500) 20%, transparent);
+  --color-fuchsia-200: color-mix(in oklab, var(--color-fuchsia-500) 32%, transparent);
+  --color-purple-50: color-mix(in oklab, var(--color-purple-500) 12%, transparent);
+  --color-purple-100: color-mix(in oklab, var(--color-purple-500) 20%, transparent);
+  --color-purple-200: color-mix(in oklab, var(--color-purple-500) 32%, transparent);
+  --color-indigo-50: color-mix(in oklab, var(--color-indigo-500) 12%, transparent);
+  --color-indigo-100: color-mix(in oklab, var(--color-indigo-500) 20%, transparent);
+  --color-indigo-200: color-mix(in oklab, var(--color-indigo-500) 32%, transparent);
+  --color-emerald-50: color-mix(in oklab, var(--color-emerald-500) 12%, transparent);
+  --color-emerald-100: color-mix(in oklab, var(--color-emerald-500) 20%, transparent);
+  --color-emerald-200: color-mix(in oklab, var(--color-emerald-500) 32%, transparent);
+  --color-primary-50: color-mix(in oklab, var(--color-primary-500) 12%, transparent);
+  --color-primary-100: color-mix(in oklab, var(--color-primary-500) 20%, transparent);
+  --color-primary-200: color-mix(in oklab, var(--color-primary-500) 32%, transparent);
+}
+
+/* Zones toujours sombres (menu, panneau de connexion) : couleurs d'origine */
+html.dark .zone-sombre {
+  --color-white: #fff;
+  --color-primary-50: #f6f3ff;
+  --color-primary-100: #ede7ff;
+  --color-primary-200: #dcd1ff;
+}
+
+@layer utilities {
+  html.dark body { background-color: var(--color-gray-50); color: var(--color-gray-800); }
+
+  /* Le texte blanc reste blanc (boutons, pastilles pleines, photos) */
+  html.dark .text-white, html.dark .hover\:text-white:hover, html.dark .group:hover .group-hover\:text-white { color: #fff; }
+
+  /* Fonds très foncés en clair → violet de marque en sombre (filtres actifs, infobulles) */
+  html.dark .bg-gray-900, html.dark .bg-gray-950, html.dark .puce-active { background-color: var(--color-primary-600); }
+  html.dark .ring-gray-900 { --tw-ring-color: var(--color-primary-600); }
+
+  /* Textes colorés éclaircis pour rester lisibles sur fond sombre */
+  html.dark .text-red-600 { color: var(--color-red-400); }
+  html.dark .text-red-700, html.dark .text-red-800, html.dark .text-red-900 { color: var(--color-red-300); }
+  html.dark .text-green-600 { color: var(--color-green-400); }
+  html.dark .text-green-700, html.dark .text-green-800, html.dark .text-green-900 { color: var(--color-green-300); }
+  html.dark .text-amber-600 { color: var(--color-amber-400); }
+  html.dark .text-amber-700, html.dark .text-amber-800, html.dark .text-amber-900 { color: var(--color-amber-300); }
+  html.dark .text-orange-600 { color: var(--color-orange-400); }
+  html.dark .text-orange-700, html.dark .text-orange-800, html.dark .text-orange-900 { color: var(--color-orange-300); }
+  html.dark .text-blue-600 { color: var(--color-blue-400); }
+  html.dark .text-blue-700, html.dark .text-blue-800, html.dark .text-blue-900 { color: var(--color-blue-300); }
+  html.dark .text-teal-600 { color: var(--color-teal-400); }
+  html.dark .text-teal-700, html.dark .text-teal-800, html.dark .text-teal-900 { color: var(--color-teal-300); }
+  html.dark .text-lime-600 { color: var(--color-lime-400); }
+  html.dark .text-lime-700, html.dark .text-lime-800, html.dark .text-lime-900 { color: var(--color-lime-300); }
+  html.dark .text-yellow-600 { color: var(--color-yellow-400); }
+  html.dark .text-yellow-700, html.dark .text-yellow-800, html.dark .text-yellow-900 { color: var(--color-yellow-300); }
+  html.dark .text-sky-600 { color: var(--color-sky-400); }
+  html.dark .text-sky-700, html.dark .text-sky-800, html.dark .text-sky-900 { color: var(--color-sky-300); }
+  html.dark .text-fuchsia-600 { color: var(--color-fuchsia-400); }
+  html.dark .text-fuchsia-700, html.dark .text-fuchsia-800, html.dark .text-fuchsia-900 { color: var(--color-fuchsia-300); }
+  html.dark .text-purple-600 { color: var(--color-purple-400); }
+  html.dark .text-purple-700, html.dark .text-purple-800, html.dark .text-purple-900 { color: var(--color-purple-300); }
+  html.dark .text-indigo-600 { color: var(--color-indigo-400); }
+  html.dark .text-indigo-700, html.dark .text-indigo-800, html.dark .text-indigo-900 { color: var(--color-indigo-300); }
+  html.dark .text-emerald-600 { color: var(--color-emerald-400); }
+  html.dark .text-emerald-700, html.dark .text-emerald-800, html.dark .text-emerald-900 { color: var(--color-emerald-300); }
+  html.dark .text-primary-600 { color: var(--color-primary-400); }
+  html.dark .text-primary-700, html.dark .text-primary-800, html.dark .text-primary-900 { color: var(--color-primary-300); }
+
+  /* Ombres plus marquées, sinon invisibles sur fond sombre */
+  html.dark .shadow-xs, html.dark .shadow-sm { --tw-shadow-color: rgb(0 0 0 / 0.4); }
+
+  /* Barre de défilement */
+  html.dark ::-webkit-scrollbar-track { background: #0f0b16; }
+  html.dark ::-webkit-scrollbar-thumb { background: #3a3148; }
+}

@@ -8,6 +8,7 @@ export interface InspectionItem {
   libelle: string;
   resultat: ResultatItem;
   observation?: string;
+  photoUrl?: string | null;
 }
 
 export interface Inspection {
@@ -22,7 +23,7 @@ export interface Inspection {
   noteGlobale?: number | null;
   notes?: string;
   createdAt: string;
-  vehicule?: { numeroInterne: string; marque: string; modele: string; numeroSerie?: string };
+  vehicule?: { id?: number; numeroInterne: string; marque: string; modele: string; immatriculation?: string; numeroSerie?: string };
   inspecteur?: { nom: string; prenom: string };
   items?: InspectionItem[];
 }

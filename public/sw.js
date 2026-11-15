@@ -1,7 +1,7 @@
 // Service Worker SOFARY GMAO
 // Stratégie : Network-first avec cache de secours.
 // Incrémenter CACHE_VERSION à chaque déploiement pour forcer le vidage du cache.
-const CACHE_VERSION = 'sofary-v2';
+const CACHE_VERSION = 'sofary-v3';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -22,8 +22,12 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Ne jamais mettre en cache les appels API
-  if (url.pathname.startsWith('/api')) return;
+  // Seulement les fichiers du site lui-même : une API ou une image sur un autre
+  // domaine (ou un autre port en développement) passe directement par le réseau
+  if (url.origin !== self.location.origin) return;
+
+  // Ne jamais mettre en cache les appels API ni les photos envoyées
+  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/uploads') || url.pathname.startsWith('/downloads')) return;
 
   // Ignorer les WebSockets
   if (url.protocol === 'ws:' || url.protocol === 'wss:') return;

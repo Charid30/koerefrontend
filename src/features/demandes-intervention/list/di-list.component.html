@@ -208,7 +208,7 @@
 @if (showDetail()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
        (click)="fermerDetail()">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" (click)="$event.stopPropagation()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]" (click)="$event.stopPropagation()">
 
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
         <div>
@@ -228,7 +228,7 @@
         </div>
       </div>
 
-      <div class="px-6 py-5 space-y-4">
+      <div class="px-6 py-5 space-y-4 overflow-y-auto">
         <!-- Véhicule -->
         @if (diDetail()!.vehicule) {
           <div class="bg-gray-50 rounded-xl px-4 py-3">
@@ -261,6 +261,45 @@
             </div>
           }
         </div>
+
+        <!-- Photos -->
+        @if (diDetail()!.photos?.length || peut('di.photo')) {
+          <div>
+            <div class="mb-2 flex items-center justify-between">
+              <p class="text-xs text-gray-400">Photos</p>
+              @if (peut('di.photo')) {
+                <label class="btn-action cursor-pointer">
+                  @if (envoiPhotoDetail()) {
+                    <span class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600"></span>
+                  } @else {
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                  }
+                  Ajouter
+                  <input type="file" class="sr-only" [accept]="typesImages" [disabled]="envoiPhotoDetail()" (change)="ajouterPhotoDetail($event)" />
+                </label>
+              }
+            </div>
+            @if (diDetail()!.photos?.length) {
+              <ul class="grid grid-cols-4 gap-2">
+                @for (p of diDetail()!.photos; track p.id) {
+                  <li class="group relative aspect-square overflow-hidden rounded-xl bg-gray-100 ring-1 ring-gray-200/70">
+                    <button type="button" class="h-full w-full" (click)="apercuPhoto.set(urlFichier(p.url))" aria-label="Agrandir la photo">
+                      <img [src]="urlFichier(p.url)" alt="" loading="lazy" class="h-full w-full object-cover" />
+                    </button>
+                    @if (peut('di.photo.supprimer')) {
+                      <button type="button" (click)="supprimerPhotoDetail(p.id)" aria-label="Supprimer la photo"
+                        class="absolute right-1 top-1 rounded-md bg-black/55 p-0.5 text-white hover:bg-red-600 md:opacity-0 md:group-hover:opacity-100">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-500">Aucune photo jointe.</p>
+            }
+          </div>
+        }
       </div>
 
       <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
@@ -526,6 +565,29 @@
               }
             </div>
 
+            <!-- Photos de la panne -->
+            <div>
+              <p class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Photos <span class="font-normal normal-case tracking-normal text-gray-400">(facultatif, 6 maximum)</span></p>
+              <div class="flex flex-wrap gap-2">
+                @for (p of photosChoisies(); track p.apercu; let i = $index) {
+                  <div class="relative h-20 w-20 overflow-hidden rounded-xl ring-1 ring-gray-200">
+                    <img [src]="p.apercu" alt="" class="h-full w-full object-cover" />
+                    <button type="button" (click)="retirerPhotoChoisie(i)" aria-label="Retirer la photo"
+                      class="absolute right-1 top-1 rounded-md bg-black/55 p-0.5 text-white hover:bg-red-600">
+                      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+                }
+                @if (photosChoisies().length < 6) {
+                  <label class="flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-200 text-xs font-medium text-gray-500 hover:border-primary-300 hover:text-primary-700">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Ajouter
+                    <input type="file" class="sr-only" multiple [accept]="typesImages" (change)="choisirPhotos($event)" />
+                  </label>
+                }
+              </div>
+            </div>
+
             @if (erreurModal()) {
               <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{{ erreurModal() }}</div>
             }
@@ -565,5 +627,12 @@
       </div>
 
     </div>
+  </div>
+}
+
+<!-- ══ Aperçu d'une photo ═══════════════════════════════════════════════ -->
+@if (apercuPhoto(); as src) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4" (click)="apercuPhoto.set(null)" role="dialog" aria-modal="true" aria-label="Aperçu de la photo">
+    <img [src]="src" alt="" class="max-h-full max-w-full rounded-xl shadow-2xl" />
   </div>
 }

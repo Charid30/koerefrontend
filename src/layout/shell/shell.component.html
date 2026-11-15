@@ -1,22 +1,16 @@
 <app-toast />
-<div class="flex h-screen bg-gray-50 overflow-hidden">
+<div class="flex h-dvh overflow-hidden bg-gray-50">
 
-  <!-- Overlay mobile -->
+  <!-- Voile derrière le menu sur mobile -->
   @if (layout.mobileOpen()) {
-    <div
-      class="fixed inset-0 bg-black/50 z-40 lg:hidden"
-      (click)="layout.close()"
-    ></div>
+    <div class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden" (click)="layout.close()" aria-hidden="true"></div>
   }
 
-  <!-- Sidebar -->
   <app-sidebar />
 
-  <!-- Contenu principal -->
-  <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+  <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
     <app-navbar />
-
-    <main class="flex-1 overflow-y-auto p-3 sm:p-6">
+    <main class="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
       <router-outlet />
     </main>
   </div>

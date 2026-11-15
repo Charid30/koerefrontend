@@ -6,12 +6,16 @@ import {
   inject,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule, NgClass } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormArray, Validators } from '@angular/forms';
+import { NgClass, TitleCasePipe } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { InspectionsService } from '../../../core/services/inspections.service';
 import { VehiculesService } from '../../../core/services/vehicules.service';
 import { Vehicule } from '../../../core/models/vehicule.model';
+import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { UploadService, verifierFichier, TYPES_IMAGES } from '../../../core/services/upload.service';
+import { forkJoin, of, catchError } from 'rxjs';
 
 interface PointTemplate {
   categorie: string;
@@ -21,7 +25,7 @@ interface PointTemplate {
 @Component({
   selector: 'app-inspection-form',
   standalone: true,
-  imports: [CommonModule, NgClass, ReactiveFormsModule, RouterLink],
+  imports: [NgClass, TitleCasePipe, ReactiveFormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './inspection-form.component.html',
 })
@@ -30,6 +34,15 @@ export class InspectionFormComponent implements OnInit {
   private router = inject(Router);
   private svc = inject(InspectionsService);
   private vehiculesSvc = inject(VehiculesService);
+  private auth = inject(AuthService);
+  private upload = inject(UploadService);
+  private toast = inject(ToastService);
+
+  readonly typesImages = TYPES_IMAGES;
+  readonly peutPhoto = this.auth.peut('inspection.photo');
+
+  /** Photos prises pendant l'inspection, rattachées à leur point de contrôle */
+  photos = signal(new Map<AbstractControl, { fichier: File; apercu: string }>());
 
   loading = signal(false);
   erreurServeur = signal('');
@@ -54,7 +67,7 @@ export class InspectionFormComponent implements OnInit {
     dateInspection: [new Date().toISOString().slice(0, 16), Validators.required],
     kilometrageReleve: [null as number | null],
     heuresMoteurReleve: [null as number | null],
-    noteGlobale: [null as number | null],
+    noteGlobale: [null as number | null, [Validators.min(0), Validators.max(20)]],
     notes: [''],
     items: this.fb.array([]),
   });
@@ -503,7 +516,74 @@ export class InspectionFormComponent implements OnInit {
     this.itemsArray.push(this.creerItem());
   }
   supprimerItem(i: number) {
+    this.retirerPhoto(this.itemsArray.at(i));
     this.itemsArray.removeAt(i);
+  }
+
+  /** Marque tous les points comme conformes (cas le plus courant) */
+  toutConforme() {
+    this.itemsArray.controls.forEach((c) => c.get('resultat')?.setValue('OK'));
+  }
+
+  compte(r: 'OK' | 'KO' | 'NA'): number {
+    return this.itemsArray.controls.filter((c) => c.get('resultat')?.value === r).length;
+  }
+
+  /** Note proposée : part des points conformes parmi les points évalués, sur 20 */
+  noteProposee(): number | null {
+    const ok = this.compte('OK');
+    const ko = this.compte('KO');
+    return ok + ko ? Math.round((ok / (ok + ko)) * 20) : null;
+  }
+
+  appliquerNoteProposee() {
+    const n = this.noteProposee();
+    if (n !== null) this.form.get('noteGlobale')?.setValue(n);
+  }
+
+  niveauNote(n: number) {
+    return n >= 16 ? 'Très bon état' : n >= 12 ? 'Satisfaisant' : n >= 8 ? 'À surveiller' : 'Mauvais état';
+  }
+
+  noteClasse(n: number) {
+    return n >= 16 ? 'bg-green-50 text-green-700 ring-green-600/20'
+      : n >= 12 ? 'bg-lime-50 text-lime-700 ring-lime-600/20'
+      : n >= 8 ? 'bg-amber-50 text-amber-800 ring-amber-600/25'
+      : 'bg-red-50 text-red-700 ring-red-600/20';
+  }
+
+  debutCategorie(i: number): boolean {
+    return i === 0 || this.itemsArray.at(i).get('categorie')?.value !== this.itemsArray.at(i - 1).get('categorie')?.value;
+  }
+
+  // ── Photos ──────────────────────────────────────────────────────────────
+  photoDe(item: AbstractControl) {
+    return this.photos().get(item) ?? null;
+  }
+
+  choisirPhoto(item: AbstractControl, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const fichier = input.files?.[0];
+    input.value = '';
+    if (!fichier) return;
+    const probleme = verifierFichier(fichier, true);
+    if (probleme) {
+      this.toast.error(probleme);
+      return;
+    }
+    this.retirerPhoto(item);
+    const m = new Map(this.photos());
+    m.set(item, { fichier, apercu: URL.createObjectURL(fichier) });
+    this.photos.set(m);
+  }
+
+  retirerPhoto(item: AbstractControl) {
+    const actuelle = this.photos().get(item);
+    if (!actuelle) return;
+    URL.revokeObjectURL(actuelle.apercu);
+    const m = new Map(this.photos());
+    m.delete(item);
+    this.photos.set(m);
   }
 
   resultatClass(r: string): string {
@@ -525,8 +605,26 @@ export class InspectionFormComponent implements OnInit {
     if (!payload.kilometrageReleve) delete payload.kilometrageReleve;
     if (!payload.heuresMoteurReleve) delete payload.heuresMoteurReleve;
     if (payload.noteGlobale === null || payload.noteGlobale === '') delete payload.noteGlobale;
+    // Points à photographier, dans l'ordre du formulaire (même ordre que les points créés)
+    const aEnvoyer = this.itemsArray.controls
+      .map((c, index) => ({ index, photo: this.photos().get(c) }))
+      .filter((x) => !!x.photo);
     this.svc.create(payload).subscribe({
-      next: (i) => this.router.navigate(['/inspections', i.id]),
+      next: (insp: any) => {
+        const crees = [...(insp.items ?? [])].sort((a: any, b: any) => a.id - b.id);
+        const envois = aEnvoyer
+          .filter((x) => crees[x.index]?.id)
+          .map((x) =>
+            this.upload.photoInspectionItem(crees[x.index].id, x.photo!.fichier).pipe(catchError(() => of(null))),
+          );
+        (envois.length ? forkJoin(envois) : of([])).subscribe((res) => {
+          const echecs = res.filter((r) => r === null).length;
+          if (echecs) this.toast.error(`${echecs} photo(s) n'ont pas pu être envoyées.`);
+          if (this.compte('KO')) this.toast.info('Des défauts ont été relevés : un signalement de panne a été créé.');
+          this.photos().forEach((p) => URL.revokeObjectURL(p.apercu));
+          this.router.navigate(['/inspections', insp.id]);
+        });
+      },
       error: (err) => {
         this.erreurServeur.set(err?.error?.message ?? "Erreur lors de l'enregistrement.");
         this.loading.set(false);

@@ -12,6 +12,8 @@ import { OtService } from '../../../core/services/ot.service';
 import { OrdreTravail } from '../../../core/models/ot.model';
 import { OT_STATUT_LABELS, OT_STATUT_CLASSES, OT_TRANSITIONS } from '../ot.constants';
 
+import { AuthService } from '../../../core/services/auth.service';
+import { Action } from '../../../core/auth/permissions';
 @Component({
   selector: 'app-ot-detail',
   standalone: true,
@@ -20,6 +22,12 @@ import { OT_STATUT_LABELS, OT_STATUT_CLASSES, OT_TRANSITIONS } from '../ot.const
   templateUrl: './ot-detail.component.html',
 })
 export class OtDetailComponent implements OnInit {
+  private readonly authPermissions = inject(AuthService);
+  /** Bouton visible seulement si l'API autorise l'action pour ce rôle */
+  peut(action: Action): boolean {
+    return this.authPermissions.peut(action);
+  }
+
   private route = inject(ActivatedRoute);
   private svc = inject(OtService);
 

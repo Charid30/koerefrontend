@@ -13,6 +13,7 @@ import { Vehicule } from '../../../core/models/vehicule.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 
+import { Action } from '../../../core/auth/permissions';
 @Component({
   selector: 'app-vehicules-list',
   standalone: true,
@@ -21,15 +22,19 @@ import { ToastService } from '../../../core/services/toast.service';
   templateUrl: './vehicules-list.component.html',
 })
 export class VehiculesListComponent implements OnInit {
+  /** Bouton visible seulement si l'API autorise l'action pour ce rôle */
+  peut(action: Action): boolean {
+    return this.auth.peut(action);
+  }
+
   private svc = inject(VehiculesService);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
 
-  readonly peutCreer = computed(() => {
-    const r = this.auth.role();
-    return r === 'ADMIN' || r === 'DIRECTION';
-  });
+  // Même règle que l'API (ADMIN, RESPONSABLE_PARC) ; l'ancienne version autorisait DIRECTION,
+  // que l'API refuse, et masquait le bouton au responsable de parc.
+  readonly peutCreer = computed(() => this.auth.role() !== null && this.auth.peut('vehicule.creer'));
 
   entites = signal<string[]>([]);
   vehicules = signal<Vehicule[]>([]);

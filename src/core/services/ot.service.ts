@@ -35,8 +35,9 @@ export class OtService {
     return this.api.patch<OrdreTravail>(`/ordres-travail/${id}`, data);
   }
 
-  updateStatut(id: number, statut: string, notes?: string) {
-    return this.api.patch<OrdreTravail>(`/ordres-travail/${id}/statut`, { statut, notes });
+  /** Le DTO de l'API nomme la note « notesControle » (un champ « notes » est refusé en 400). */
+  updateStatut(id: number, statut: string, notesControle?: string) {
+    return this.api.patch<OrdreTravail>(`/ordres-travail/${id}/statut`, { statut, notesControle });
   }
 
   affecterMecanicien(otId: number, mecanicienId: number) {

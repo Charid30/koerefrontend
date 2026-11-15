@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthResponse, User, Role } from '../models/user.model';
+import { Action, autorise } from '../auth/permissions';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -17,6 +18,11 @@ export class AuthService {
   readonly role = computed(() => this._user()?.role ?? null);
 
   constructor(private http: HttpClient, private router: Router) {}
+
+  /** L'utilisateur connecté a-t-il le droit de faire cette action (règles de l'API) ? */
+  peut(action: Action): boolean {
+    return autorise(this.role() as Role | null, action);
+  }
 
   login(email: string, motDePasse: string) {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, { email, motDePasse }).pipe(

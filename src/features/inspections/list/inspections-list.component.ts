@@ -19,6 +19,8 @@ interface PointTemplate {
   libelle: string;
 }
 
+import { AuthService } from '../../../core/services/auth.service';
+import { Action } from '../../../core/auth/permissions';
 @Component({
   selector: 'app-inspections-list',
   standalone: true,
@@ -27,6 +29,12 @@ interface PointTemplate {
   templateUrl: './inspections-list.component.html',
 })
 export class InspectionsListComponent implements OnInit {
+  private readonly authPermissions = inject(AuthService);
+  /** Bouton visible seulement si l'API autorise l'action pour ce rôle */
+  peut(action: Action): boolean {
+    return this.authPermissions.peut(action);
+  }
+
   private svc = inject(InspectionsService);
   private vehiculesSvc = inject(VehiculesService);
   private toast = inject(ToastService);

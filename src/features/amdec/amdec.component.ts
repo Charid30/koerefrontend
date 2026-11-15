@@ -13,6 +13,8 @@ import { VehiculesService } from '../../core/services/vehicules.service';
 import { AmdecAnalyse } from '../../core/models/amdec.model';
 import { Vehicule } from '../../core/models/vehicule.model';
 
+import { AuthService } from '../../core/services/auth.service';
+import { Action } from '../../core/auth/permissions';
 @Component({
   selector: 'app-amdec',
   standalone: true,
@@ -21,6 +23,12 @@ import { Vehicule } from '../../core/models/vehicule.model';
   templateUrl: './amdec.component.html',
 })
 export class AmdecComponent implements OnInit {
+  private readonly authPermissions = inject(AuthService);
+  /** Bouton visible seulement si l'API autorise l'action pour ce rôle */
+  peut(action: Action): boolean {
+    return this.authPermissions.peut(action);
+  }
+
   private svc = inject(AmdecService);
   private vehiculesSvc = inject(VehiculesService);
   private fb = inject(FormBuilder);

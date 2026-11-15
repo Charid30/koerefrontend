@@ -281,7 +281,14 @@ export class UsersComponent implements OnInit {
     this.erreur.set('');
     const val = this.form.value as any;
     const obs = this.modeEdition()
-      ? this.svc.update(this.editId()!, { prenom: val.prenom, nom: val.nom, role: val.role })
+      ? this.svc.update(this.editId()!, {
+          prenom: val.prenom,
+          nom: val.nom,
+          role: val.role,
+          // Téléphone et département sont modifiables dans le formulaire : ils doivent être envoyés
+          telephone: val.telephone ?? '',
+          departement: val.departement ?? '',
+        })
       : this.svc.create(val);
     obs.subscribe({
       next: () => {

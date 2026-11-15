@@ -34,7 +34,7 @@
         <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Changer le statut</h2>
         <div class="flex flex-wrap gap-3">
           @for (t of transitionsDisponibles(); track t) {
-            <button (click)="changerStatut(t)"
+            <button [hidden]="!peut('ot.statut')" (click)="changerStatut(t)"
               [disabled]="actionLoading()"
               class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50"
               [ngClass]="transitionClass(t)">

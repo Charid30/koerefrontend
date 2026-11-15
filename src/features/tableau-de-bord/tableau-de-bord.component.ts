@@ -76,6 +76,9 @@ export class TableauDeBordComponent implements OnInit {
     () => !this.isDirection() && !this.isMecanicien() && !this.isChauffeur(),
   );
   /** Graphiques d'analyse : gestionnaires et direction */
+  /** Le bouton « Nouvel OT » ne s'affiche que si l'API autorise la création */
+  readonly peutCreerOt = computed(() => this.role() !== null && this.auth.peut('ot.creer'));
+
   readonly voitAnalyses = computed(() => this.isGestion() || this.isDirection());
 
   readonly salutation = computed(() => (this.today.getHours() < 18 ? 'Bonjour' : 'Bonsoir'));
@@ -147,7 +150,8 @@ export class TableauDeBordComponent implements OnInit {
       label: 'Alertes stock',
       valeur: String(d.stock.alertesSeuil),
       detail: `sur ${d.stock.totalReferences} références`,
-      lien: this.isDirection() ? undefined : '/stocks',
+      // La page Stocks n'est ouverte qu'aux rôles autorisés par l'API
+      lien: this.auth.peut('stock.gerer') ? '/stocks' : undefined,
       statut:
         d.stock.alertesSeuil > 0
           ? { niveau: 'critique', texte: 'Sous le seuil' }
@@ -229,7 +233,7 @@ export class TableauDeBordComponent implements OnInit {
         titre: `${d.stock.alertesSeuil} pièce(s) sous le seuil`,
         detail: `sur ${d.stock.totalReferences} références en stock`,
         lien: '/stocks',
-        action: lecture ? undefined : 'Réapprovisionner',
+        action: this.auth.peut('stock.gerer') ? 'Réapprovisionner' : undefined,
       });
 
     if (d.ordresTravail.enAttente > 0)
@@ -238,7 +242,7 @@ export class TableauDeBordComponent implements OnInit {
         titre: `${d.ordresTravail.enAttente} OT à valider`,
         detail: 'En attente de validation',
         lien: '/ordres-travail',
-        action: lecture ? undefined : 'Valider',
+        action: this.auth.peut('ot.statut') ? 'Valider' : undefined,
       });
 
     const ordre: Record<Statut, number> = { critique: 0, attention: 1, ok: 2 };

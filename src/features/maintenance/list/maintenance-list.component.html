@@ -20,7 +20,7 @@
       <h1 class="page-titre">Maintenance préventive</h1>
       <p class="page-sous-titre">Les programmes d’entretien de chaque véhicule, triés par urgence.</p>
     </div>
-    <button (click)="ouvrirModal()" class="btn-primaire self-start sm:self-auto">
+    <button [hidden]="!peut('maintenance.creer')" (click)="ouvrirModal()" class="btn-primaire self-start sm:self-auto">
       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
       Inscrire un véhicule
     </button>
@@ -94,7 +94,7 @@
       @if (periodiques().length === 0) {
         <div class="px-4 py-16 text-center">
           <p class="text-sm font-medium text-gray-900">Aucun véhicule suivi au kilométrage</p>
-          <button (click)="ouvrirModal()" class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-800">Inscrire un premier véhicule</button>
+          <button [hidden]="!peut('maintenance.creer')" (click)="ouvrirModal()" class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-800">Inscrire un premier véhicule</button>
         </div>
       } @else {
         <ul class="divide-y divide-gray-100">
@@ -112,8 +112,8 @@
                   </p>
                 </div>
                 <div class="flex items-center gap-1">
-                  <button (click)="ouvrirExecution(p)" class="btn-action">Marquer effectuée</button>
-                  <button (click)="retirer(p)" title="Retirer du programme" aria-label="Retirer du programme" class="btn-icone-danger md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100">
+                  <button [hidden]="!peut('maintenance.executer')" (click)="ouvrirExecution(p)" class="btn-action">Marquer effectuée</button>
+                  <button [hidden]="!peut('maintenance.retirer')" (click)="retirer(p)" title="Retirer du programme" aria-label="Retirer du programme" class="btn-icone-danger md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                   </button>
                 </div>
@@ -148,7 +148,7 @@
       @if (generales().length === 0) {
         <div class="px-4 py-16 text-center">
           <p class="text-sm font-medium text-gray-900">Aucun véhicule suivi par intervalle de temps</p>
-          <button (click)="ouvrirModal()" class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-800">Inscrire un premier véhicule</button>
+          <button [hidden]="!peut('maintenance.creer')" (click)="ouvrirModal()" class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-800">Inscrire un premier véhicule</button>
         </div>
       } @else {
         <ul class="divide-y divide-gray-100">
@@ -167,8 +167,8 @@
                   </p>
                 </div>
                 <div class="flex items-center gap-1">
-                  <button (click)="ouvrirExecution(p)" class="btn-action">Marquer effectuée</button>
-                  <button (click)="retirer(p)" title="Retirer du programme" aria-label="Retirer du programme" class="btn-icone-danger md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100">
+                  <button [hidden]="!peut('maintenance.executer')" (click)="ouvrirExecution(p)" class="btn-action">Marquer effectuée</button>
+                  <button [hidden]="!peut('maintenance.retirer')" (click)="retirer(p)" title="Retirer du programme" aria-label="Retirer du programme" class="btn-icone-danger md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                   </button>
                 </div>

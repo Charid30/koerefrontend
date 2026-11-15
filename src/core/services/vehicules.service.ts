@@ -34,7 +34,8 @@ export class VehiculesService {
   }
 
   update(id: number, data: Partial<Vehicule>) {
-    return this.api.patch<Vehicule>(`/vehicules/${id}`, data);
+    // L'API expose PUT /vehicules/:id (un PATCH renvoyait 404)
+    return this.api.put<Vehicule>(`/vehicules/${id}`, data);
   }
 
   getHistorique(id: number) {
